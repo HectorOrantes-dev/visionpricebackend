@@ -40,8 +40,16 @@ class Usuario(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     nombre: Mapped[str] = mapped_column(String(150), nullable=False)
     correo: Mapped[str] = mapped_column(String(150), unique=True, nullable=False)
-    contrasena_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Nullable: los usuarios que entran con Google no tienen contraseña local.
+    contrasena_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     telefono: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # Origen de la cuenta y vínculo con Google (Sign-In).
+    proveedor_auth: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="local", default="local"
+    )  # local | google
+    google_sub: Mapped[str | None] = mapped_column(
+        String(255), unique=True, nullable=True
+    )
     rol_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("roles.id"), nullable=False
     )
