@@ -1,13 +1,33 @@
+# --- Python ---
 __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
 venv/
 env/
-.env
-*.db
-*.sqlite3
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# --- Entornos / secretos (NUNCA subir) ---
+.env
+.env.*
+!.env.example          # el template SÍ se sube (no tiene secretos)
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets.*
+credentials*.json
+service-account*.json
+
+# --- Base de datos / esquema ---
+*.db
+*.sqlite3
+*.sql                  # esquema/volcados de BD — no subir
+.sql
+
+# --- Sistema ---
 .DS_Store
+Thumbs.db
