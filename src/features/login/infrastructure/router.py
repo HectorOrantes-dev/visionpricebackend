@@ -19,6 +19,7 @@ from src.features.login.infrastructure.schemas import (
     TokenOut,
     VerifyRequest,
 )
+from src.shared.request_utils import get_client_ip
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -38,7 +39,7 @@ async def login(
         LoginCommand(
             correo=body.correo,
             contrasena=body.contrasena,
-            ip_origen=request.client.host if request.client else None,
+            ip_origen=get_client_ip(request),
         )
     )
     return LoginChallengeOut(

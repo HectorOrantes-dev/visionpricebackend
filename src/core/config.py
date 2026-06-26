@@ -71,6 +71,8 @@ class Settings(BaseSettings):
     # --- Microservicio 2FA ---
     two_factor_base_url: str = "https://visionprice-2fa-production.up.railway.app"
     two_factor_timeout: int = 20
+    # Máximo de intentos de código por desafío (anti fuerza bruta).
+    two_factor_max_intentos: int = 5
 
     # --- Microservicio de Extracciones ---
     extractions_base_url: str = ""

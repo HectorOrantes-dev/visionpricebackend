@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.features.login.domain.entities import DesafioPendiente
 from src.features.login.domain.ports import TwoFactorChallengeRepository
 from src.shared.models import Desafio2FA
 
@@ -31,7 +32,7 @@ class SqlAlchemyChallengeRepository(TwoFactorChallengeRepository):
         )
         await self._session.commit()
 
-    async def registrar_resultado(self, correo: str, *, exito: bool) -> None:
+    async def obtener_pendiente(self, correo: str) -> DesafioPendiente | None:
         result = await self._session.execute(
             select(Desafio2FA)
             .where(Desafio2FA.correo == correo, Desafio2FA.estado == "pendiente")
@@ -40,9 +41,22 @@ class SqlAlchemyChallengeRepository(TwoFactorChallengeRepository):
         )
         desafio = result.scalar_one_or_none()
         if desafio is None:
+            return None
+        return DesafioPendiente(id=desafio.id, intentos=desafio.intentos)
+
+    async def actualizar(
+        self,
+        desafio_id: int,
+        *,
+        estado: str,
+        intentos: int,
+        verificado: bool = False,
+    ) -> None:
+        desafio = await self._session.get(Desafio2FA, desafio_id)
+        if desafio is None:
             return
-        desafio.intentos += 1
-        if exito:
-            desafio.estado = "verificado"
+        desafio.estado = estado
+        desafio.intentos = intentos
+        if verificado:
             desafio.fecha_verificacion = datetime.now(timezone.utc)
         await self._session.commit()

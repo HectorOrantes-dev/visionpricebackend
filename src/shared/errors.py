@@ -60,6 +60,16 @@ class TwoFactorInvalid(DomainError):
     status_code = 401
 
 
+class NoActiveChallenge(DomainError):
+    code = "no_active_challenge"
+    status_code = 400
+
+
+class TooManyAttempts(DomainError):
+    code = "too_many_attempts"
+    status_code = 429
+
+
 class UpstreamError(DomainError):
     """Falla al hablar con un microservicio externo."""
 

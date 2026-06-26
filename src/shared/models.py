@@ -232,7 +232,7 @@ class Desafio2FA(Base):
     )  # login | registro
     estado: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default="pendiente", default="pendiente"
-    )  # pendiente | verificado | fallido | expirado
+    )  # pendiente | verificado | bloqueado | expirado
     intentos: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="0", default=0
     )

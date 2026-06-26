@@ -3,6 +3,14 @@ from dataclasses import dataclass
 
 
 @dataclass
+class DesafioPendiente:
+    """Desafío 2FA pendiente más reciente para un correo."""
+
+    id: int
+    intentos: int
+
+
+@dataclass
 class AuthUser:
     """Proyección del usuario necesaria para autenticar y emitir el token."""
 
