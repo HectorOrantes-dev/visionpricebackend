@@ -86,6 +86,11 @@ class Settings(BaseSettings):
     # --- Microservicio de Pagos ---
     payments_base_url: str = ""
 
+    # --- Microservicio de Proveedores (catálogo + geolocalización) ---
+    providers_base_url: str = ""
+    providers_api_key: str = ""
+    providers_radio_km_default: float = 10.0
+
     # --- Webhooks/callbacks ENTRANTES (servicio -> esta API) ---
     # Los microservicios de ML y Pagos llaman de vuelta con este X-Api-Key.
     webhook_api_key: str = "cambia-esto-por-una-api-key-interna"

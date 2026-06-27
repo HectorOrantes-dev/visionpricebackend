@@ -9,6 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
 from src.features.account.infrastructure.router import router as account_router
+from src.features.cotizaciones.infrastructure.router import (
+    router as cotizaciones_router,
+)
 from src.features.dispositivos.infrastructure.router import (
     router as dispositivos_router,
 )
@@ -56,6 +59,7 @@ def create_app() -> FastAPI:
     app.include_router(pagos_router, prefix=settings.api_prefix)
     app.include_router(notificaciones_router, prefix=settings.api_prefix)
     app.include_router(dispositivos_router, prefix=settings.api_prefix)
+    app.include_router(cotizaciones_router, prefix=settings.api_prefix)
 
     return app
 
