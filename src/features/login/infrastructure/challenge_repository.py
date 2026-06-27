@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.features.login.domain.entities import DesafioPendiente
+from src.features.login.domain.entities import DesafioReciente
 from src.features.login.domain.ports import TwoFactorChallengeRepository
 from src.shared.models import Desafio2FA
 
@@ -32,17 +32,19 @@ class SqlAlchemyChallengeRepository(TwoFactorChallengeRepository):
         )
         await self._session.commit()
 
-    async def obtener_pendiente(self, correo: str) -> DesafioPendiente | None:
+    async def obtener_ultimo(self, correo: str) -> DesafioReciente | None:
         result = await self._session.execute(
             select(Desafio2FA)
-            .where(Desafio2FA.correo == correo, Desafio2FA.estado == "pendiente")
+            .where(Desafio2FA.correo == correo)
             .order_by(Desafio2FA.id.desc())
             .limit(1)
         )
         desafio = result.scalar_one_or_none()
         if desafio is None:
             return None
-        return DesafioPendiente(id=desafio.id, intentos=desafio.intentos)
+        return DesafioReciente(
+            id=desafio.id, intentos=desafio.intentos, estado=desafio.estado
+        )
 
     async def actualizar(
         self,

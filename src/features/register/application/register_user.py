@@ -56,6 +56,9 @@ class RegisterUser:
             )
         )
 
+        # Solo se DELEGA el envío del código al microservicio 2FA (dueño del
+        # código). La verificación posterior (/auth/login/verify) confía en el
+        # micro, así que aquí NO hace falta crear un desafío.
         if send_2fa and self._two_factor is not None:
             await self._two_factor.send_code(user.correo)
 

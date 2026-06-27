@@ -1,10 +1,11 @@
 """Caso de uso: paso 2 del login (verificar código 2FA y emitir JWT).
 
-Reglas (independientes de la IP — la IP es sólo auditoría):
-  - debe existir un desafío PENDIENTE para el correo,
-  - límite de `max_intentos` por desafío → estado `bloqueado` (429),
-  - si el micro 2FA dice `valid` → estado `verificado` y se emite el JWT,
-  - si `reason == expired` → estado `expirado`.
+Responsabilidades:
+  - El **microservicio 2FA** es la fuente de verdad del código (genera, expira,
+    single-use, valida). Aquí solo confiamos en su `valid`.
+  - El registro en `desafios_2fa` es **auditoría best-effort**: si hay un desafío
+    pendiente, sumamos intento / aplicamos rate-limit (bloqueado → 429) y dejamos
+    rastro (estado, IP). Si NO hay desafío, NO se bloquea: se confía en el micro.
 
 El JWT se firma con el secreto compartido con el microservicio de Pagos.
 """
@@ -15,12 +16,7 @@ from src.features.login.domain.ports import (
     TwoFactorChallengeRepository,
 )
 from src.features.two_factor.domain.ports import TwoFactorPort
-from src.shared.errors import (
-    NoActiveChallenge,
-    TooManyAttempts,
-    TwoFactorInvalid,
-    Unauthorized,
-)
+from src.shared.errors import TooManyAttempts, TwoFactorInvalid, Unauthorized
 from src.shared.security import create_access_token
 
 
@@ -53,20 +49,36 @@ class VerifyTwoFactor:
         self._max_intentos = max_intentos
 
     async def execute(self, cmd: VerifyCommand) -> AuthToken:
+        # Auditoría/rate-limit best-effort sobre el último desafío (si existe).
         desafio = None
         if self._challenges is not None:
-            desafio = await self._challenges.obtener_pendiente(cmd.correo)
-            if desafio is None:
-                raise NoActiveChallenge("No hay un desafío 2FA activo.")
-            if desafio.intentos >= self._max_intentos:
-                await self._challenges.actualizar(
-                    desafio.id, estado="bloqueado", intentos=desafio.intentos
-                )
-                raise TooManyAttempts("Demasiados intentos. Solicita un código nuevo.")
+            desafio = await self._challenges.obtener_ultimo(cmd.correo)
+            if desafio is not None:
+                # Bloqueo pegajoso: una vez bloqueado, sigue bloqueado hasta
+                # que se pida un código nuevo (que crea otro desafío).
+                if desafio.estado == "bloqueado" or (
+                    desafio.estado == "pendiente"
+                    and desafio.intentos >= self._max_intentos
+                ):
+                    if desafio.estado != "bloqueado":
+                        await self._challenges.actualizar(
+                            desafio.id,
+                            estado="bloqueado",
+                            intentos=desafio.intentos,
+                        )
+                    raise TooManyAttempts(
+                        "Demasiados intentos. Solicita un código nuevo."
+                    )
 
+        # Fuente de verdad del código: el microservicio 2FA.
         result = await self._two_factor.verify_code(cmd.correo, cmd.code)
 
-        if desafio is not None and self._challenges is not None:
+        # Rastro del resultado (solo si el desafío sigue pendiente).
+        if (
+            desafio is not None
+            and desafio.estado == "pendiente"
+            and self._challenges is not None
+        ):
             intentos = desafio.intentos + 1
             if result.valid:
                 await self._challenges.actualizar(

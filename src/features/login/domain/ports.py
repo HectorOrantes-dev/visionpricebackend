@@ -1,7 +1,7 @@
 """Puertos de persistencia del login."""
 from abc import ABC, abstractmethod
 
-from src.features.login.domain.entities import AuthUser, DesafioPendiente
+from src.features.login.domain.entities import AuthUser, DesafioReciente
 
 
 class LoginUserRepository(ABC):
@@ -25,8 +25,8 @@ class TwoFactorChallengeRepository(ABC):
         ...
 
     @abstractmethod
-    async def obtener_pendiente(self, correo: str) -> DesafioPendiente | None:
-        """Desafío pendiente más reciente del correo (o None)."""
+    async def obtener_ultimo(self, correo: str) -> DesafioReciente | None:
+        """Desafío más reciente del correo, en cualquier estado (o None)."""
 
     @abstractmethod
     async def actualizar(

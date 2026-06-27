@@ -3,11 +3,12 @@ from dataclasses import dataclass
 
 
 @dataclass
-class DesafioPendiente:
-    """Desafío 2FA pendiente más reciente para un correo."""
+class DesafioReciente:
+    """Desafío 2FA más reciente para un correo (cualquier estado)."""
 
     id: int
     intentos: int
+    estado: str  # pendiente | verificado | bloqueado | expirado
 
 
 @dataclass
