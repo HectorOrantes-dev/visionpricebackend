@@ -290,6 +290,37 @@ class Notificacion(Base):
     fecha_envio: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
+class IdempotencyKey(Base):
+    """Idempotencia de peticiones mutantes (evita doble procesamiento).
+
+    Guarda la respuesta de la primera petición con una llave dada; si llega otra
+    con la misma llave, se devuelve la respuesta guardada sin reprocesar.
+    """
+
+    __tablename__ = "idempotency_keys"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    clave: Mapped[str] = mapped_column(
+        String(255), unique=True, nullable=False, index=True
+    )
+    usuario_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    metodo: Mapped[str] = mapped_column(String(10), nullable=False)
+    ruta: Mapped[str] = mapped_column(String(255), nullable=False)
+    request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    estado: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="procesando", default="procesando"
+    )  # procesando | completado
+    status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    content_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    response_body: Mapped[str | None] = mapped_column(Text, nullable=True)  # base64
+    fecha_creacion: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+    fecha_actualizacion: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+
+
 class Dispositivo(Base):
     """Device token de FCM para enviar push a la app móvil del usuario.
 
