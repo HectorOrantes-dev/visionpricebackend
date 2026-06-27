@@ -90,6 +90,15 @@ class Settings(BaseSettings):
     # Los microservicios de ML y Pagos llaman de vuelta con este X-Api-Key.
     webhook_api_key: str = "cambia-esto-por-una-api-key-interna"
 
+    # --- Notificaciones ---
+    # Días antes de `vigencia_hasta` para avisar que la suscripción vence.
+    notificaciones_dias_aviso: int = 7
+
+    # --- Firebase Cloud Messaging (push a móvil) ---
+    # JSON COMPLETO del service account (una sola línea). Si está vacío, el push
+    # queda desactivado (las notificaciones in-app siguen funcionando).
+    firebase_credentials: str = ""
+
     # --- Cifrado de datos sensibles en reposo (Fernet) ---
     # Una o varias claves Fernet separadas por coma. La PRIMERA cifra; todas se
     # prueban al descifrar (permite rotación de clave sin perder datos viejos).
@@ -113,6 +122,10 @@ class Settings(BaseSettings):
     @property
     def data_encryption_keys(self) -> list[str]:
         return [k.strip() for k in self.data_encryption_key.split(",") if k.strip()]
+
+    @property
+    def firebase_enabled(self) -> bool:
+        return bool(self.firebase_credentials.strip())
 
     @property
     def sqlalchemy_url(self) -> str:

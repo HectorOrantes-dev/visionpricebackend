@@ -256,6 +256,66 @@ class Desafio2FA(Base):
     )
 
 
+class Notificacion(Base):
+    """Notificación in-app del usuario.
+
+    IMPORTANTE: NO almacena datos sensibles (correo/teléfono). Solo referencia
+    `usuario_id` + contenido no sensible. El destinatario real se resuelve en
+    memoria al enviar y se descarta (no se persiste aquí).
+    """
+
+    __tablename__ = "notificaciones"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("usuarios.id"), nullable=False, index=True
+    )
+    tipo: Mapped[str] = mapped_column(String(40), nullable=False)
+    titulo: Mapped[str] = mapped_column(String(150), nullable=False)
+    cuerpo: Mapped[str] = mapped_column(String(500), nullable=False)
+    canal: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="in_app", default="in_app"
+    )  # in_app | email | push
+    estado: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="pendiente", default="pendiente"
+    )  # pendiente | enviada | fallida
+    referencia_tipo: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    referencia_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    leida: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false", default=False
+    )
+    fecha_creacion: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+    fecha_envio: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class Dispositivo(Base):
+    """Device token de FCM para enviar push a la app móvil del usuario.
+
+    El `token` es un identificador opaco de dispositivo (no PII). No se expone
+    en respuestas de la API y se desactiva si FCM lo reporta como inválido.
+    """
+
+    __tablename__ = "dispositivos"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("usuarios.id"), nullable=False, index=True
+    )
+    token: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
+    plataforma: Mapped[str] = mapped_column(String(20), nullable=False)  # android|ios|web
+    activo: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="true", default=True
+    )
+    fecha_registro: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+    fecha_actualizacion: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+
+
 class BitacoraAuditoria(Base):
     __tablename__ = "bitacora_auditoria"
 

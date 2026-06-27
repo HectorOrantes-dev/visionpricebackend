@@ -9,9 +9,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
 from src.features.account.infrastructure.router import router as account_router
+from src.features.dispositivos.infrastructure.router import (
+    router as dispositivos_router,
+)
 from src.features.google_auth.infrastructure.router import router as google_router
 from src.features.grabaciones.infrastructure.router import router as grabaciones_router
 from src.features.login.infrastructure.router import router as login_router
+from src.features.notificaciones.infrastructure.router import (
+    router as notificaciones_router,
+)
 from src.features.pagos.infrastructure.router import router as pagos_router
 from src.features.register.infrastructure.router import router as register_router
 from src.features.roles.infrastructure.router import router as roles_router
@@ -48,6 +54,8 @@ def create_app() -> FastAPI:
     app.include_router(account_router, prefix=settings.api_prefix)
     app.include_router(grabaciones_router, prefix=settings.api_prefix)
     app.include_router(pagos_router, prefix=settings.api_prefix)
+    app.include_router(notificaciones_router, prefix=settings.api_prefix)
+    app.include_router(dispositivos_router, prefix=settings.api_prefix)
 
     return app
 
