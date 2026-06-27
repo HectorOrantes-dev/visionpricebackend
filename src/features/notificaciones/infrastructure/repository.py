@@ -1,5 +1,5 @@
 """Adaptador SQLAlchemy del repositorio de notificaciones."""
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +13,7 @@ from src.features.notificaciones.domain.entities import (
 from src.features.notificaciones.domain.ports import NotificacionRepository
 from src.shared.models import Notificacion as NotifModel
 from src.shared.models import Usuario
+from src.shared.timeutils import utcnow
 
 
 def _to_entity(m: NotifModel) -> Notificacion:
@@ -54,7 +55,7 @@ class SqlAlchemyNotificacionRepository(NotificacionRepository):
     async def existe_reciente(
         self, usuario_id: int, tipo: str, dentro_dias: int
     ) -> bool:
-        desde = datetime.now(timezone.utc) - timedelta(days=dentro_dias)
+        desde = utcnow() - timedelta(days=dentro_dias)
         result = await self._session.execute(
             select(NotifModel.id).where(
                 NotifModel.usuario_id == usuario_id,
@@ -90,14 +91,14 @@ class SqlAlchemyNotificacionRepository(NotificacionRepository):
         await self._session.execute(
             update(NotifModel)
             .where(NotifModel.id == notificacion_id)
-            .values(estado="enviada", fecha_envio=datetime.now(timezone.utc))
+            .values(estado="enviada", fecha_envio=utcnow())
         )
         await self._session.commit()
 
     async def suscripciones_por_vencer(
         self, dias: int
     ) -> list[SuscripcionUsuario]:
-        ahora = datetime.now(timezone.utc)
+        ahora = utcnow()
         limite = ahora + timedelta(days=dias)
         result = await self._session.execute(
             select(Usuario.id, Usuario.plan_activo, Usuario.vigencia_hasta).where(
@@ -113,7 +114,7 @@ class SqlAlchemyNotificacionRepository(NotificacionRepository):
         ]
 
     async def suscripciones_vencidas(self) -> list[SuscripcionUsuario]:
-        ahora = datetime.now(timezone.utc)
+        ahora = utcnow()
         result = await self._session.execute(
             select(Usuario.id, Usuario.plan_activo, Usuario.vigencia_hasta).where(
                 Usuario.plan_activo.is_not(None),

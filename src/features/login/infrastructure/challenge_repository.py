@@ -1,12 +1,11 @@
 """Adaptador SQLAlchemy del registro de desafíos 2FA."""
-from datetime import datetime, timezone
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.features.login.domain.entities import DesafioReciente
 from src.features.login.domain.ports import TwoFactorChallengeRepository
 from src.shared.models import Desafio2FA
+from src.shared.timeutils import utcnow
 
 
 class SqlAlchemyChallengeRepository(TwoFactorChallengeRepository):
@@ -60,5 +59,5 @@ class SqlAlchemyChallengeRepository(TwoFactorChallengeRepository):
         desafio.estado = estado
         desafio.intentos = intentos
         if verificado:
-            desafio.fecha_verificacion = datetime.now(timezone.utc)
+            desafio.fecha_verificacion = utcnow()
         await self._session.commit()

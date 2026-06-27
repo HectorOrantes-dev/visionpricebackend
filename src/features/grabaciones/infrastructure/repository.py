@@ -1,6 +1,4 @@
 """Adaptador SQLAlchemy del repositorio de grabaciones."""
-from datetime import datetime, timezone
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +10,7 @@ from src.features.grabaciones.domain.entities import (
 from src.features.grabaciones.domain.ports import GrabacionRepository
 from src.shared.errors import NotFound
 from src.shared.models import ExtraccionLLM, GrabacionAudio, Transcripcion
+from src.shared.timeutils import utcnow
 
 
 class SqlAlchemyGrabacionRepository(GrabacionRepository):
@@ -96,5 +95,5 @@ class SqlAlchemyGrabacionRepository(GrabacionRepository):
             extraccion.version_modelo = resultado.version_modelo
 
         fila.estado_sincronizacion = "sincronizado"
-        fila.fecha_sincronizacion = datetime.now(timezone.utc)
+        fila.fecha_sincronizacion = utcnow()
         await self._session.commit()

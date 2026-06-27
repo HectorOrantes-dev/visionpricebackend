@@ -1,11 +1,10 @@
 """Adaptador SQLAlchemy del repositorio de dispositivos."""
-from datetime import datetime, timezone
-
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.features.dispositivos.domain.ports import DispositivoRepository
 from src.shared.models import Dispositivo
+from src.shared.timeutils import utcnow
 
 
 class SqlAlchemyDispositivoRepository(DispositivoRepository):
@@ -20,7 +19,7 @@ class SqlAlchemyDispositivoRepository(DispositivoRepository):
             select(Dispositivo).where(Dispositivo.token == token)
         )
         fila = existente.scalar_one_or_none()
-        ahora = datetime.now(timezone.utc)
+        ahora = utcnow()
         if fila is None:
             self._session.add(
                 Dispositivo(

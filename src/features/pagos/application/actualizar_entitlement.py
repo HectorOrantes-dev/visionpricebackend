@@ -9,6 +9,7 @@ from datetime import datetime
 
 from src.features.pagos.domain.ports import EntitlementRepository
 from src.shared.errors import NotFound
+from src.shared.timeutils import to_naive_utc
 
 # Estados de suscripción que conceden acceso.
 ESTADOS_ACTIVOS = {"active", "trialing", "pending"}
@@ -29,7 +30,8 @@ class ActualizarEntitlement:
     async def execute(self, cmd: EntitlementCommand) -> None:
         activo = cmd.status in ESTADOS_ACTIVOS
         plan = cmd.plan_key if activo else None
-        vigencia = cmd.current_period_end if activo else None
+        # Normaliza a UTC naive (la fecha llega con tz desde el ISO con 'Z').
+        vigencia = to_naive_utc(cmd.current_period_end) if activo else None
 
         actualizado = await self._repo.actualizar(cmd.user_id, plan, vigencia)
         if not actualizado:

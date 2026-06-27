@@ -6,13 +6,13 @@ microservicio de ML en su object storage.
 """
 import hashlib
 from dataclasses import dataclass
-from datetime import datetime, timezone
 
 from src.features.grabaciones.domain.entities import Grabacion, NuevaGrabacion
 from src.features.grabaciones.domain.ports import (
     AudioSubmissionPort,
     GrabacionRepository,
 )
+from src.shared.timeutils import utcnow
 
 
 @dataclass
@@ -40,7 +40,7 @@ class RegistrarGrabacion:
                 proyecto_id=cmd.proyecto_id,
                 duracion_segundos=cmd.duracion_segundos,
                 hash_archivo=hashlib.sha256(cmd.audio).hexdigest(),
-                fecha_grabacion=datetime.now(timezone.utc),
+                fecha_grabacion=utcnow(),
             )
         )
 
