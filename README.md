@@ -116,6 +116,43 @@ Dockerfile                    migra y arranca (Railway: usa $PORT)
 La normalización de la URL de Neon (driver `asyncpg` + SSL) la hace
 [`src/core/config.py`](src/core/config.py); pegas la string de Neon sin tocarla.
 
+## Seguridad de datos sensibles (cifrado en reposo + filtros)
+
+Integridad/confidencialidad de PII con cifrado simétrico **Fernet**. Mapeo del
+patrón (DTO → interceptor[cipher+filter] → service → repository → BD):
+
+| Concepto | Implementación |
+|----------|----------------|
+| DTO | Schemas Pydantic (`infrastructure/schemas.py`) |
+| **Interceptor + cipher** | [`EncryptedString`](src/shared/encrypted_types.py) — cifra al escribir / descifra al leer, entre la entity y la BD |
+| cipher | [`src/shared/crypto.py`](src/shared/crypto.py) — Fernet/MultiFernet (rotación de clave) |
+| Service / Repository | `application/` y `infrastructure/` (trabajan con texto plano) |
+| **Filter** (salida) | [`src/shared/sensitive.py`](src/shared/sensitive.py) — `mask_phone`, `mask_email`, `mask_value` |
+| **Datos en reposo** | columnas `EncryptedString` → ciphertext en la BD |
+| **Datos en tránsito** | descifrado automático al leer + TLS (HTTPS) |
+
+### Cómo marcar un campo como sensible
+1. En el modelo, cambia el tipo a `EncryptedString(255)` (la columna debe ser amplia,
+   el token cifrado es largo):
+   ```python
+   telefono: Mapped[str | None] = mapped_column(EncryptedString(255), nullable=True)
+   ```
+2. Crea una migración que amplíe la columna a `String(255)`/`Text`.
+3. Si lo vas a exponer a terceros, enmascáralo con los filtros de `sensitive.py`.
+
+> Campo aplicado de ejemplo: `usuarios.telefono`. **No** cifres campos por los que
+> haces búsquedas por igualdad (p. ej. `correo` del login): el cifrado aleatorio
+> rompe el `WHERE`; para esos casos se usa un *blind index* (hash determinista).
+
+### Clave
+- `DATA_ENCRYPTION_KEY` es **obligatoria en producción**. Genérala con:
+  ```
+  python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+  ```
+- Rotación: pon la clave nueva primero y deja la vieja, separadas por coma (MultiFernet
+  cifra con la primera y descifra con cualquiera).
+- Sin clave, en local se usa un passthrough (NO cifra) con warning.
+
 ## Microservicios integrados
 - **2FA**: `TWO_FACTOR_BASE_URL` — `src/features/two_factor`.
 - **Pagos**: `PAYMENTS_BASE_URL` — `src/microservices/payments_gateway.py` (reenvía el JWT).

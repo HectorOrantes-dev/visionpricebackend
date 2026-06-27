@@ -90,6 +90,12 @@ class Settings(BaseSettings):
     # Los microservicios de ML y Pagos llaman de vuelta con este X-Api-Key.
     webhook_api_key: str = "cambia-esto-por-una-api-key-interna"
 
+    # --- Cifrado de datos sensibles en reposo (Fernet) ---
+    # Una o varias claves Fernet separadas por coma. La PRIMERA cifra; todas se
+    # prueban al descifrar (permite rotación de clave sin perder datos viejos).
+    # Genera una con: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    data_encryption_key: str = ""
+
     @property
     def cors_origins(self) -> list[str]:
         if self.allowed_origins.strip() in ("", "*"):
@@ -103,6 +109,10 @@ class Settings(BaseSettings):
     @property
     def google_audiences(self) -> list[str]:
         return [c.strip() for c in self.google_client_ids.split(",") if c.strip()]
+
+    @property
+    def data_encryption_keys(self) -> list[str]:
+        return [k.strip() for k in self.data_encryption_key.split(",") if k.strip()]
 
     @property
     def sqlalchemy_url(self) -> str:

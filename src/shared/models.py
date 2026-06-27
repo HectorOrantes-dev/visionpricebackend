@@ -20,6 +20,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON
 
 from src.core.database import Base
+from src.shared.encrypted_types import EncryptedString
 
 # JSONB en Postgres; JSON genérico en SQLite (local).
 JSONType = JSONB().with_variant(JSON(), "sqlite")
@@ -42,7 +43,9 @@ class Usuario(Base):
     correo: Mapped[str] = mapped_column(String(150), unique=True, nullable=False)
     # Nullable: los usuarios que entran con Google no tienen contraseña local.
     contrasena_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    telefono: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # Dato sensible: cifrado en reposo (Fernet) vía EncryptedString. La columna
+    # debe ser amplia porque el token cifrado es mucho más largo que el original.
+    telefono: Mapped[str | None] = mapped_column(EncryptedString(255), nullable=True)
     # Origen de la cuenta y vínculo con Google (Sign-In).
     proveedor_auth: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default="local", default="local"
