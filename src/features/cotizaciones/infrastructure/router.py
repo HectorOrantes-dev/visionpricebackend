@@ -1,7 +1,7 @@
 """Router de cotizaciones (todo protegido con JWT del usuario)."""
 from io import BytesIO
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import StreamingResponse
 
 from src.core.config import settings
@@ -33,8 +33,14 @@ from src.features.cotizaciones.infrastructure.schemas import (
     ProductoCercanoOut,
 )
 from src.oauth.dependencies import CurrentUser, get_current_user
+from src.oauth.roles import require_roles
+from src.shared.auditoria import Auditor, get_auditor
+from src.shared.request_utils import get_client_ip
 
 router = APIRouter(prefix="/cotizaciones", tags=["cotizaciones"])
+
+# Quién puede generar presupuestos (ajusta según tu negocio).
+ROLES_COTIZAN = require_roles("contratista", "arquitecto", "ingeniero_civil")
 
 
 @router.post(
@@ -85,8 +91,10 @@ async def productos_cercanos(
 )
 async def crear(
     body: CrearCotizacionRequest,
-    user: CurrentUser = Depends(get_current_user),
+    request: Request,
+    user: CurrentUser = Depends(ROLES_COTIZAN),
     use_case: CrearCotizacion = Depends(get_crear_cotizacion),
+    auditor: Auditor = Depends(get_auditor),
 ) -> CotizacionOut:
     cot = await use_case.execute(
         CrearCotizacionCommand(
@@ -99,6 +107,14 @@ async def crear(
                 for i in body.items
             ],
         )
+    )
+    await auditor.registrar(
+        usuario_id=user.id,
+        accion="cotizacion_creada",
+        tabla_afectada="presupuestos",
+        registro_id=cot.id,
+        detalles={"total": cot.total, "proyecto_id": cot.proyecto_id},
+        ip_origen=get_client_ip(request),
     )
     return CotizacionOut(
         id=cot.id,

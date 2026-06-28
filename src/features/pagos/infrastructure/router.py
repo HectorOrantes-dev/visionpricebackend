@@ -13,6 +13,7 @@ from src.features.pagos.infrastructure.schemas import (
     PagosCallbackResponse,
 )
 from src.oauth.internal import require_internal_key
+from src.shared.auditoria import Auditor, get_auditor
 
 router = APIRouter(tags=["pagos"])
 
@@ -26,6 +27,7 @@ router = APIRouter(tags=["pagos"])
 async def pagos_callback(
     body: PagosCallbackRequest,
     use_case: ActualizarEntitlement = Depends(get_actualizar_entitlement),
+    auditor: Auditor = Depends(get_auditor),
 ) -> PagosCallbackResponse:
     await use_case.execute(
         EntitlementCommand(
@@ -34,5 +36,12 @@ async def pagos_callback(
             status=body.status,
             current_period_end=body.current_period_end,
         )
+    )
+    await auditor.registrar(
+        usuario_id=body.user_id,
+        accion="entitlement_actualizado",
+        tabla_afectada="usuarios",
+        registro_id=body.user_id,
+        detalles={"plan": body.plan_key, "status": body.status},
     )
     return PagosCallbackResponse(received=True, user_id=body.user_id)

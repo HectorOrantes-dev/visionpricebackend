@@ -35,6 +35,11 @@ class InvalidCredentials(DomainError):
     status_code = 401
 
 
+class Forbidden(DomainError):
+    code = "forbidden"
+    status_code = 403
+
+
 class NotFound(DomainError):
     code = "not_found"
     status_code = 404

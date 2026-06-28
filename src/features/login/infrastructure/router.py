@@ -19,6 +19,7 @@ from src.features.login.infrastructure.schemas import (
     TokenOut,
     VerifyRequest,
 )
+from src.shared.auditoria import Auditor, get_auditor
 from src.shared.request_utils import get_client_ip
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -57,10 +58,19 @@ async def login(
 )
 async def verify(
     body: VerifyRequest,
+    request: Request,
     use_case: VerifyTwoFactor = Depends(get_verify_two_factor),
+    auditor: Auditor = Depends(get_auditor),
 ) -> TokenOut:
     token = await use_case.execute(
         VerifyCommand(correo=body.correo, code=body.code)
+    )
+    await auditor.registrar(
+        usuario_id=token.user_id,
+        accion="login",
+        tabla_afectada="usuarios",
+        registro_id=token.user_id,
+        ip_origen=get_client_ip(request),
     )
     return TokenOut(
         access_token=token.access_token,

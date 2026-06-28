@@ -27,6 +27,7 @@ from src.features.roles.infrastructure.router import router as roles_router
 from src.shared.errors import register_error_handlers
 from src.shared.idempotency import IdempotencyMiddleware
 from src.shared.schemas import HealthOut
+from src.shared.security_headers import SecurityHeadersMiddleware
 
 
 def create_app() -> FastAPI:
@@ -36,9 +37,11 @@ def create_app() -> FastAPI:
         description="API principal de VisionPrice (usuarios, auth 2FA, proyectos).",
     )
 
+    # Orden: se añaden de adentro hacia afuera. CORS (último) queda por fuera.
     # Idempotencia: se activa solo cuando la petición trae Idempotency-Key.
-    # Se añade primero para que CORS (añadido después) quede por fuera.
     app.add_middleware(IdempotencyMiddleware)
+    # Cabeceras de seguridad en TODAS las respuestas.
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
