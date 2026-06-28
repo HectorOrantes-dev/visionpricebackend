@@ -256,6 +256,38 @@ class Desafio2FA(Base):
     )
 
 
+class Equipo(Base):
+    """Equipo/plantilla de un arquitecto o ingeniero civil (propietario)."""
+
+    __tablename__ = "equipos"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(150), nullable=False)
+    propietario_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("usuarios.id"), nullable=False, index=True
+    )
+    fecha_creacion: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+
+
+class EquipoMiembro(Base):
+    """Personas en la plantilla de un equipo (maestros, contratistas…)."""
+
+    __tablename__ = "equipo_miembros"
+
+    equipo_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("equipos.id", ondelete="CASCADE"), primary_key=True
+    )
+    usuario_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("usuarios.id"), primary_key=True
+    )
+    rol_en_equipo: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    fecha_asignacion: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+
+
 class Notificacion(Base):
     """Notificación in-app del usuario.
 

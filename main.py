@@ -9,12 +9,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
 from src.features.account.infrastructure.router import router as account_router
+from src.features.auditoria_precios.infrastructure.router import (
+    router as auditoria_precios_router,
+)
 from src.features.cotizaciones.infrastructure.router import (
     router as cotizaciones_router,
 )
 from src.features.dispositivos.infrastructure.router import (
     router as dispositivos_router,
 )
+from src.features.equipos.infrastructure.router import router as equipos_router
 from src.features.google_auth.infrastructure.router import router as google_router
 from src.features.grabaciones.infrastructure.router import router as grabaciones_router
 from src.features.login.infrastructure.router import router as login_router
@@ -22,6 +26,7 @@ from src.features.notificaciones.infrastructure.router import (
     router as notificaciones_router,
 )
 from src.features.pagos.infrastructure.router import router as pagos_router
+from src.features.proyectos.infrastructure.router import router as proyectos_router
 from src.features.register.infrastructure.router import router as register_router
 from src.features.roles.infrastructure.router import router as roles_router
 from src.shared.errors import register_error_handlers
@@ -67,6 +72,9 @@ def create_app() -> FastAPI:
     app.include_router(notificaciones_router, prefix=settings.api_prefix)
     app.include_router(dispositivos_router, prefix=settings.api_prefix)
     app.include_router(cotizaciones_router, prefix=settings.api_prefix)
+    app.include_router(equipos_router, prefix=settings.api_prefix)
+    app.include_router(proyectos_router, prefix=settings.api_prefix)
+    app.include_router(auditoria_precios_router, prefix=settings.api_prefix)
 
     return app
 

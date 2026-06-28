@@ -33,14 +33,11 @@ from src.features.cotizaciones.infrastructure.schemas import (
     ProductoCercanoOut,
 )
 from src.oauth.dependencies import CurrentUser, get_current_user
-from src.oauth.roles import require_roles
 from src.shared.auditoria import Auditor, get_auditor
 from src.shared.request_utils import get_client_ip
 
+# Cotizar (calcular, ver productos, crear cotización, PDF) lo hacen TODOS los roles.
 router = APIRouter(prefix="/cotizaciones", tags=["cotizaciones"])
-
-# Quién puede generar presupuestos (ajusta según tu negocio).
-ROLES_COTIZAN = require_roles("contratista", "arquitecto", "ingeniero_civil")
 
 
 @router.post(
@@ -92,7 +89,7 @@ async def productos_cercanos(
 async def crear(
     body: CrearCotizacionRequest,
     request: Request,
-    user: CurrentUser = Depends(ROLES_COTIZAN),
+    user: CurrentUser = Depends(get_current_user),
     use_case: CrearCotizacion = Depends(get_crear_cotizacion),
     auditor: Auditor = Depends(get_auditor),
 ) -> CotizacionOut:

@@ -95,6 +95,13 @@ class Settings(BaseSettings):
     # Los microservicios de ML y Pagos llaman de vuelta con este X-Api-Key.
     webhook_api_key: str = "cambia-esto-por-una-api-key-interna"
 
+    # --- Auditoría de precios (detección de anomalías, sin ML) ---
+    # Decimales para la rejilla de zona (2 ≈ ~1.1 km). Margen vs mediana y
+    # mínimo de muestras para aplicar IQR/MAD.
+    auditoria_zona_precision: int = 2
+    auditoria_margen: float = 0.30
+    auditoria_min_muestras: int = 5
+
     # --- Notificaciones ---
     # Días antes de `vigencia_hasta` para avisar que la suscripción vence.
     notificaciones_dias_aviso: int = 7
