@@ -66,7 +66,7 @@ async def obtener_grabacion(
     summary="Subir una grabación: guarda metadata y la envía al microservicio ML",
 )
 async def crear_grabacion(
-    proyecto_id: int | None = Form(default=None),
+    proyecto_id: int = Form(..., description="Obligatorio: el micro de ML lo exige"),
     duracion_segundos: int | None = Form(default=None),
     audio: UploadFile = File(...),
     user: CurrentUser = Depends(get_current_user),
