@@ -106,6 +106,12 @@ class SqlAlchemyGrabacionRepository(GrabacionRepository):
             version_modelo=extraccion.version_modelo if extraccion else None,
         )
 
+    async def eliminar(self, grabacion_id: int) -> None:
+        fila = await self._session.get(GrabacionAudio, grabacion_id)
+        if fila is not None:
+            await self._session.delete(fila)
+            await self._session.commit()
+
     async def marcar_enviada(
         self, grabacion_id: int, object_storage_key: str | None
     ) -> None:

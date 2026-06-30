@@ -44,14 +44,20 @@ class RegistrarGrabacion:
             )
         )
 
-        ack = await self._audio.submit_audio(
-            grabacion_id=grabacion.id,
-            user_hash=cmd.user_hash,
-            proyecto_id=cmd.proyecto_id,
-            filename=cmd.filename,
-            audio=cmd.audio,
-            content_type=cmd.content_type,
-        )
+        # Atómico: si no se pudo enviar al microservicio de ML, se borra la fila
+        # para no dejar grabaciones huérfanas (la app reintenta desde su cola).
+        try:
+            ack = await self._audio.submit_audio(
+                grabacion_id=grabacion.id,
+                user_hash=cmd.user_hash,
+                proyecto_id=cmd.proyecto_id,
+                filename=cmd.filename,
+                audio=cmd.audio,
+                content_type=cmd.content_type,
+            )
+        except Exception:
+            await self._repo.eliminar(grabacion.id)
+            raise
 
         object_key = ack.get("object_storage_key") if isinstance(ack, dict) else None
         await self._repo.marcar_enviada(grabacion.id, object_key)

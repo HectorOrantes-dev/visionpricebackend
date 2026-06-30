@@ -32,6 +32,10 @@ class GrabacionRepository(ABC):
         """Tras subir el audio al microservicio: estado=procesando."""
 
     @abstractmethod
+    async def eliminar(self, grabacion_id: int) -> None:
+        """Borra la grabación (rollback si falla el envío al ML)."""
+
+    @abstractmethod
     async def guardar_resultado_ml(self, resultado: ResultadoML) -> None:
         """Persiste transcripción + extracción y marca estado=sincronizado.
 

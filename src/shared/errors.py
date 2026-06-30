@@ -7,10 +7,14 @@ Mismo contrato que tus microservicios:
 Las features lanzan `DomainError` (o subclases); `register_error_handlers`
 los traduce a JSON con el status HTTP correcto.
 """
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+_log = logging.getLogger("visionprice.errors")
 
 
 class DomainError(Exception):
@@ -91,7 +95,17 @@ def _payload(code: str, message: str, details: dict | None = None) -> dict:
 
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
-    async def _domain(_: Request, exc: DomainError) -> JSONResponse:
+    async def _domain(request: Request, exc: DomainError) -> JSONResponse:
+        # Loguea los 5xx (p. ej. upstream_error) para verlos en Railway.
+        if exc.status_code >= 500:
+            _log.warning(
+                "%s %s -> %s: %s | details=%s",
+                request.method,
+                request.url.path,
+                exc.code,
+                exc.message,
+                exc.details,
+            )
         return JSONResponse(
             status_code=exc.status_code,
             content=_payload(exc.code, exc.message, exc.details),
