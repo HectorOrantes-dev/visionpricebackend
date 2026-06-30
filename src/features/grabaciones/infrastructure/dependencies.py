@@ -3,6 +3,10 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_session
+from src.features.grabaciones.application.consultar_grabaciones import (
+    ListarGrabaciones,
+    ObtenerGrabacion,
+)
 from src.features.grabaciones.application.procesar_resultado_ml import (
     ProcesarResultadoML,
 )
@@ -30,3 +34,15 @@ def get_procesar_resultado_ml(
     session: AsyncSession = Depends(get_session),
 ) -> ProcesarResultadoML:
     return ProcesarResultadoML(repo=SqlAlchemyGrabacionRepository(session))
+
+
+def get_listar_grabaciones(
+    session: AsyncSession = Depends(get_session),
+) -> ListarGrabaciones:
+    return ListarGrabaciones(repo=SqlAlchemyGrabacionRepository(session))
+
+
+def get_obtener_grabacion(
+    session: AsyncSession = Depends(get_session),
+) -> ObtenerGrabacion:
+    return ObtenerGrabacion(repo=SqlAlchemyGrabacionRepository(session))

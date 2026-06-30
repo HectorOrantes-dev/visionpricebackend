@@ -22,6 +22,37 @@ class Grabacion:
 
 
 @dataclass
+class GrabacionResumen:
+    """Vista de lista para el historial de audios del usuario."""
+
+    id: int
+    proyecto_id: int | None
+    estado_sincronizacion: str
+    duracion_segundos: int | None
+    fecha_grabacion: datetime
+    fecha_sincronizacion: datetime | None
+    tiene_transcripcion: bool
+
+
+@dataclass
+class GrabacionDetalle:
+    """Detalle con el resultado del procesamiento (cuando ya está)."""
+
+    id: int
+    proyecto_id: int | None
+    estado_sincronizacion: str
+    object_storage_key: str | None
+    duracion_segundos: int | None
+    fecha_grabacion: datetime
+    fecha_sincronizacion: datetime | None
+    transcripcion: str | None
+    modelo_voice_to_text: str | None
+    confianza: float | None
+    extraccion_json: dict | None
+    version_modelo: str | None
+
+
+@dataclass
 class ResultadoML:
     """Lo que devuelve el microservicio de ML por el webhook."""
 

@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.features.grabaciones.domain.entities import (
     Grabacion,
+    GrabacionDetalle,
+    GrabacionResumen,
     NuevaGrabacion,
     ResultadoML,
 )
@@ -35,6 +37,73 @@ class SqlAlchemyGrabacionRepository(GrabacionRepository):
             proyecto_id=fila.proyecto_id,
             object_storage_key=fila.object_storage_key,
             estado_sincronizacion=fila.estado_sincronizacion,
+        )
+
+    async def listar_de(self, usuario_id: int) -> list[GrabacionResumen]:
+        result = await self._session.execute(
+            select(GrabacionAudio, Transcripcion.id)
+            .outerjoin(
+                Transcripcion,
+                Transcripcion.grabacion_id == GrabacionAudio.id,
+            )
+            .where(GrabacionAudio.usuario_id == usuario_id)
+            .order_by(GrabacionAudio.id.desc())
+        )
+        return [
+            GrabacionResumen(
+                id=g.id,
+                proyecto_id=g.proyecto_id,
+                estado_sincronizacion=g.estado_sincronizacion,
+                duracion_segundos=g.duracion_segundos,
+                fecha_grabacion=g.fecha_grabacion,
+                fecha_sincronizacion=g.fecha_sincronizacion,
+                tiene_transcripcion=transcripcion_id is not None,
+            )
+            for g, transcripcion_id in result.all()
+        ]
+
+    async def obtener_detalle(
+        self, grabacion_id: int, usuario_id: int
+    ) -> GrabacionDetalle | None:
+        g = await self._session.get(GrabacionAudio, grabacion_id)
+        if g is None or g.usuario_id != usuario_id:
+            return None
+
+        result = await self._session.execute(
+            select(Transcripcion).where(
+                Transcripcion.grabacion_id == grabacion_id
+            )
+        )
+        transcripcion = result.scalar_one_or_none()
+
+        extraccion = None
+        if transcripcion is not None:
+            res_ext = await self._session.execute(
+                select(ExtraccionLLM).where(
+                    ExtraccionLLM.transcripcion_id == transcripcion.id
+                )
+            )
+            extraccion = res_ext.scalar_one_or_none()
+
+        return GrabacionDetalle(
+            id=g.id,
+            proyecto_id=g.proyecto_id,
+            estado_sincronizacion=g.estado_sincronizacion,
+            object_storage_key=g.object_storage_key,
+            duracion_segundos=g.duracion_segundos,
+            fecha_grabacion=g.fecha_grabacion,
+            fecha_sincronizacion=g.fecha_sincronizacion,
+            transcripcion=transcripcion.texto if transcripcion else None,
+            modelo_voice_to_text=(
+                transcripcion.modelo_voice_to_text if transcripcion else None
+            ),
+            confianza=(
+                float(transcripcion.confianza)
+                if transcripcion and transcripcion.confianza is not None
+                else None
+            ),
+            extraccion_json=extraccion.parametros_json if extraccion else None,
+            version_modelo=extraccion.version_modelo if extraccion else None,
         )
 
     async def marcar_enviada(

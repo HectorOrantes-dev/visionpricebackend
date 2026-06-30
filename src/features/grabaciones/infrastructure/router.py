@@ -1,6 +1,10 @@
-"""Router de grabaciones: alta de audio (protegida) + webhook ML (interno)."""
+"""Router de grabaciones: alta de audio + consulta (estado/transcripción) + webhook ML."""
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 
+from src.features.grabaciones.application.consultar_grabaciones import (
+    ListarGrabaciones,
+    ObtenerGrabacion,
+)
 from src.features.grabaciones.application.procesar_resultado_ml import (
     ProcesarResultadoML,
 )
@@ -10,11 +14,15 @@ from src.features.grabaciones.application.registrar_grabacion import (
 )
 from src.features.grabaciones.domain.entities import ResultadoML
 from src.features.grabaciones.infrastructure.dependencies import (
+    get_listar_grabaciones,
+    get_obtener_grabacion,
     get_procesar_resultado_ml,
     get_registrar_grabacion,
 )
 from src.features.grabaciones.infrastructure.schemas import (
+    GrabacionDetalleOut,
     GrabacionOut,
+    GrabacionResumenOut,
     MLCallbackRequest,
     MLCallbackResponse,
 )
@@ -22,6 +30,33 @@ from src.oauth.dependencies import CurrentUser, get_current_user
 from src.oauth.internal import require_internal_key
 
 router = APIRouter(tags=["grabaciones"])
+
+
+@router.get(
+    "/grabaciones",
+    response_model=list[GrabacionResumenOut],
+    summary="Historial de mis grabaciones (con estado de sincronización)",
+)
+async def listar_grabaciones(
+    user: CurrentUser = Depends(get_current_user),
+    use_case: ListarGrabaciones = Depends(get_listar_grabaciones),
+) -> list[GrabacionResumenOut]:
+    items = await use_case.execute(user.id)
+    return [GrabacionResumenOut(**g.__dict__) for g in items]
+
+
+@router.get(
+    "/grabaciones/{grabacion_id}",
+    response_model=GrabacionDetalleOut,
+    summary="Detalle: estado + transcripción + extracción (cuando esté lista)",
+)
+async def obtener_grabacion(
+    grabacion_id: int,
+    user: CurrentUser = Depends(get_current_user),
+    use_case: ObtenerGrabacion = Depends(get_obtener_grabacion),
+) -> GrabacionDetalleOut:
+    detalle = await use_case.execute(grabacion_id, user.id)
+    return GrabacionDetalleOut(**detalle.__dict__)
 
 
 @router.post(

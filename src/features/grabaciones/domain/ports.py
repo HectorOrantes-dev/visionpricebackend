@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 
 from src.features.grabaciones.domain.entities import (
     Grabacion,
+    GrabacionDetalle,
+    GrabacionResumen,
     NuevaGrabacion,
     ResultadoML,
 )
@@ -11,6 +13,16 @@ from src.features.grabaciones.domain.entities import (
 class GrabacionRepository(ABC):
     @abstractmethod
     async def crear(self, nueva: NuevaGrabacion) -> Grabacion:
+        ...
+
+    @abstractmethod
+    async def listar_de(self, usuario_id: int) -> list[GrabacionResumen]:
+        ...
+
+    @abstractmethod
+    async def obtener_detalle(
+        self, grabacion_id: int, usuario_id: int
+    ) -> GrabacionDetalle | None:
         ...
 
     @abstractmethod

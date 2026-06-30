@@ -1,4 +1,6 @@
 """Schemas HTTP de la feature grabaciones."""
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -8,6 +10,30 @@ class GrabacionOut(BaseModel):
     proyecto_id: int | None
     object_storage_key: str | None
     estado_sincronizacion: str
+
+
+class GrabacionResumenOut(BaseModel):
+    id: int
+    proyecto_id: int | None
+    estado_sincronizacion: str
+    duracion_segundos: int | None
+    fecha_grabacion: datetime
+    fecha_sincronizacion: datetime | None
+    tiene_transcripcion: bool
+
+
+class GrabacionDetalleOut(BaseModel):
+    id: int
+    proyecto_id: int | None
+    estado_sincronizacion: str
+    duracion_segundos: int | None
+    fecha_grabacion: datetime
+    fecha_sincronizacion: datetime | None
+    transcripcion: str | None
+    modelo_voice_to_text: str | None
+    confianza: float | None
+    extraccion_json: dict | None
+    version_modelo: str | None
 
 
 class MLCallbackRequest(BaseModel):
