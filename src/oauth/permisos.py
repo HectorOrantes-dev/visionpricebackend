@@ -18,8 +18,10 @@ class Permisos:
     # Cotizar (grabar, transcribir, calcular m², ver productos, PDF): todos.
     COTIZAR = TODOS
 
-    # Gestión e historial de proyectos múltiples (el maestro de obra no).
-    GESTION_PROYECTOS = ("contratista", "arquitecto", "ingeniero_civil")
+    # Gestión e historial de proyectos: todos los roles gestionan LOS SUYOS
+    # (cada operación de /proyectos filtra por dueño = user.id). El maestro de
+    # obra los crea desde la app móvil antes de grabar, así que también entra.
+    GESTION_PROYECTOS = TODOS
 
     # Crear equipos y administrar la plantilla: solo dirección técnica.
     GESTION_EQUIPOS = ("arquitecto", "ingeniero_civil")

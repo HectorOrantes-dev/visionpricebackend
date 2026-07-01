@@ -1,7 +1,7 @@
 """Router de proyectos (gestión e historial).
 
-Restringido a Permisos.GESTION_PROYECTOS (contratista, arquitecto, ing. civil);
-el maestro de obra no gestiona proyectos. Cada operación filtra por dueño.
+Restringido a Permisos.GESTION_PROYECTOS (todos los roles autenticados,
+incluido el maestro de obra). Cada operación filtra por dueño (user.id).
 """
 from fastapi import APIRouter, Depends, Query, Request, status
 

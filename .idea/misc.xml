@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectRootManager" version="2" project-jdk-name="openjdk-26" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/out" />
+  </component>
+  <component name="StoredSessionsInfoStore">
+    <option name="sessions">
+      <list>
+        <SessionInfoState>
+          <option name="id" value="20260527-111420-00dd4092-8371-47ae-86f3-1ea947cbf234" />
+          <option name="lastUpdateTimestamp" value="1779902060030" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="New Agent Session" />
+          <option name="user" value="233360@ids.upchiapas.edu.mx" />
+        </SessionInfoState>
+      </list>
+    </option>
+  </component>
+</project>
