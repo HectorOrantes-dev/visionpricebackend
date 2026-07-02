@@ -26,6 +26,7 @@ from src.features.notificaciones.infrastructure.router import (
     router as notificaciones_router,
 )
 from src.features.pagos.infrastructure.router import router as pagos_router
+from src.features.password.infrastructure.router import router as password_router
 from src.features.proyectos.infrastructure.router import router as proyectos_router
 from src.features.register.infrastructure.router import router as register_router
 from src.features.roles.infrastructure.router import router as roles_router
@@ -64,6 +65,7 @@ def create_app() -> FastAPI:
     # Routers de features, todos bajo el prefijo /api/v1.
     app.include_router(register_router, prefix=settings.api_prefix)
     app.include_router(login_router, prefix=settings.api_prefix)
+    app.include_router(password_router, prefix=settings.api_prefix)
     app.include_router(google_router, prefix=settings.api_prefix)
     app.include_router(roles_router, prefix=settings.api_prefix)
     app.include_router(account_router, prefix=settings.api_prefix)
