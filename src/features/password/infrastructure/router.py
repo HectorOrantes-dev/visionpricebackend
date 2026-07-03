@@ -1,4 +1,10 @@
-"""Router de restablecimiento de contraseña (olvidé mi contraseña)."""
+"""Router de restablecimiento de contraseña (olvidé mi contraseña).
+
+Flujo recomendado:
+  1. POST /auth/password/forgot       → el micro 2FA envía el código al correo
+  2. POST /auth/password/verify-code  → valida el código y devuelve reset_token
+  3. POST /auth/password/reset        → con reset_token (o code) fija la nueva pass
+"""
 from fastapi import APIRouter, Depends, Request, status
 
 from src.features.password.application.restablecer import (
@@ -6,14 +12,18 @@ from src.features.password.application.restablecer import (
     RestablecerCommand,
 )
 from src.features.password.application.solicitar_reset import SolicitarReset
+from src.features.password.application.verificar_codigo import VerificarCodigo
 from src.features.password.infrastructure.dependencies import (
     get_restablecer,
     get_solicitar_reset,
+    get_verificar_codigo,
 )
 from src.features.password.infrastructure.schemas import (
     ForgotRequest,
     MessageOut,
     ResetRequest,
+    VerifyCodeRequest,
+    VerifyCodeResponse,
 )
 from src.shared.auditoria import Auditor, get_auditor
 from src.shared.request_utils import get_client_ip
@@ -41,10 +51,23 @@ async def forgot(
 
 
 @router.post(
+    "/verify-code",
+    response_model=VerifyCodeResponse,
+    summary="Verifica el código y devuelve un reset_token de un solo uso",
+)
+async def verify_code(
+    body: VerifyCodeRequest,
+    use_case: VerificarCodigo = Depends(get_verificar_codigo),
+) -> VerifyCodeResponse:
+    reset_token = await use_case.execute(body.correo, body.code)
+    return VerifyCodeResponse(valid=True, reset_token=reset_token)
+
+
+@router.post(
     "/reset",
     response_model=MessageOut,
     status_code=status.HTTP_200_OK,
-    summary="Verifica el código y establece la nueva contraseña",
+    summary="Fija la nueva contraseña (con reset_token o code)",
 )
 async def reset(
     body: ResetRequest,
@@ -55,8 +78,9 @@ async def reset(
     usuario_id = await use_case.execute(
         RestablecerCommand(
             correo=body.correo,
-            code=body.code,
             nueva_contrasena=body.nueva_contrasena,
+            reset_token=body.reset_token,
+            code=body.code,
         )
     )
     await auditor.registrar(

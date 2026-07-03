@@ -67,6 +67,8 @@ class Settings(BaseSettings):
     jwt_secret: str = "cambia-esto-por-un-secreto-largo-y-aleatorio"
     jwt_algorithm: str = "HS256"
     jwt_expires_minutes: int = 1440
+    # Vigencia del reset_token que emite /auth/password/verify-code.
+    password_reset_token_minutes: int = 15
 
     # --- Google OAuth (Sign-In) ---
     # Uno o varios client IDs (web, android, ios) separados por coma. El id_token

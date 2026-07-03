@@ -10,6 +10,7 @@ los traduce a JSON con el status HTTP correcto.
 import logging
 
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -69,6 +70,16 @@ class TwoFactorInvalid(DomainError):
     status_code = 401
 
 
+class CodigoInvalido(DomainError):
+    code = "code_invalid"
+    status_code = 400
+
+
+class CodigoExpirado(DomainError):
+    code = "code_expired"
+    status_code = 410
+
+
 class NoActiveChallenge(DomainError):
     code = "no_active_challenge"
     status_code = 400
@@ -113,12 +124,24 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def _validation(_: Request, exc: RequestValidationError) -> JSONResponse:
+        # exc.errors() puede traer una Exception en ctx (validadores custom),
+        # que no es serializable a JSON: la convertimos a str.
+        errores = []
+        for e in exc.errors():
+            e = dict(e)
+            ctx = e.get("ctx")
+            if ctx:
+                e["ctx"] = {
+                    k: (str(v) if isinstance(v, Exception) else v)
+                    for k, v in ctx.items()
+                }
+            errores.append(e)
         return JSONResponse(
             status_code=422,
             content=_payload(
                 "validation_error",
                 "Datos de entrada inválidos.",
-                {"errors": exc.errors()},
+                {"errors": jsonable_encoder(errores)},
             ),
         )
 
