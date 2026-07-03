@@ -22,6 +22,7 @@ from src.features.password.infrastructure.schemas import (
     ForgotRequest,
     MessageOut,
     ResetRequest,
+    ResetSessionOut,
     VerifyCodeRequest,
     VerifyCodeResponse,
 )
@@ -65,17 +66,17 @@ async def verify_code(
 
 @router.post(
     "/reset",
-    response_model=MessageOut,
+    response_model=ResetSessionOut,
     status_code=status.HTTP_200_OK,
-    summary="Fija la nueva contraseña (con reset_token o code)",
+    summary="Fija la nueva contraseña e inicia sesión (con reset_token o code)",
 )
 async def reset(
     body: ResetRequest,
     request: Request,
     use_case: Restablecer = Depends(get_restablecer),
     auditor: Auditor = Depends(get_auditor),
-) -> MessageOut:
-    usuario_id = await use_case.execute(
+) -> ResetSessionOut:
+    sesion = await use_case.execute(
         RestablecerCommand(
             correo=body.correo,
             nueva_contrasena=body.nueva_contrasena,
@@ -84,10 +85,16 @@ async def reset(
         )
     )
     await auditor.registrar(
-        usuario_id=usuario_id,
+        usuario_id=sesion.user_id,
         accion="password_reset",
         tabla_afectada="usuarios",
-        registro_id=usuario_id,
+        registro_id=sesion.user_id,
         ip_origen=get_client_ip(request),
     )
-    return MessageOut(message="Contraseña actualizada. Ya puedes iniciar sesión.")
+    return ResetSessionOut(
+        access_token=sesion.access_token,
+        token_type=sesion.token_type,
+        user_id=sesion.user_id,
+        correo=sesion.correo,
+        rol=sesion.rol,
+    )

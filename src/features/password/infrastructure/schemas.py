@@ -32,3 +32,14 @@ class ResetRequest(BaseModel):
 
 class MessageOut(BaseModel):
     message: str
+
+
+class ResetSessionOut(BaseModel):
+    """Tras el reset se inicia sesión directo (auto-login seguro)."""
+
+    access_token: str
+    token_type: str = "bearer"
+    user_id: int
+    correo: EmailStr
+    rol: str
+    message: str = "Contraseña actualizada. Sesión iniciada."

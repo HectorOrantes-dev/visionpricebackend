@@ -12,3 +12,7 @@ class PasswordUserRepository(ABC):
         self, usuario_id: int, contrasena_hash: str
     ) -> None:
         ...
+
+    @abstractmethod
+    async def datos_sesion(self, usuario_id: int) -> tuple[str, str] | None:
+        """(correo, rol) para emitir el JWT tras el reset; None si no existe."""
