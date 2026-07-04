@@ -58,7 +58,7 @@ class ResultadoML:
 
     grabacion_id: int
     texto: str
-    parametros_json: dict
+    parametros_json: dict | None = None
     object_storage_key: str | None = None
     modelo_voice_to_text: str | None = None
     confianza: float | None = None

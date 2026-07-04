@@ -41,7 +41,7 @@ class MLCallbackRequest(BaseModel):
 
     grabacion_id: int
     texto: str
-    parametros_json: dict
+    parametros_json: dict | None = None   # opcional: si BETO falla, va solo el texto
     object_storage_key: str | None = None
     modelo_voice_to_text: str | None = Field(default=None, max_length=100)
     confianza: float | None = Field(default=None, ge=0, le=1)

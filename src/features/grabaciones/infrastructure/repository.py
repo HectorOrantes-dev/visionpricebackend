@@ -151,23 +151,26 @@ class SqlAlchemyGrabacionRepository(GrabacionRepository):
             transcripcion.modelo_voice_to_text = resultado.modelo_voice_to_text
             transcripcion.confianza = resultado.confianza
 
-        existing_ext = await self._session.execute(
-            select(ExtraccionLLM).where(
-                ExtraccionLLM.transcripcion_id == transcripcion.id
-            )
-        )
-        extraccion = existing_ext.scalar_one_or_none()
-        if extraccion is None:
-            self._session.add(
-                ExtraccionLLM(
-                    transcripcion_id=transcripcion.id,
-                    parametros_json=resultado.parametros_json,
-                    version_modelo=resultado.version_modelo,
+        # La extracción (BETO) es opcional: si el micro no la manda (o falló),
+        # guardamos solo la transcripción — el cálculo de m² usa el texto.
+        if resultado.parametros_json:
+            existing_ext = await self._session.execute(
+                select(ExtraccionLLM).where(
+                    ExtraccionLLM.transcripcion_id == transcripcion.id
                 )
             )
-        else:
-            extraccion.parametros_json = resultado.parametros_json
-            extraccion.version_modelo = resultado.version_modelo
+            extraccion = existing_ext.scalar_one_or_none()
+            if extraccion is None:
+                self._session.add(
+                    ExtraccionLLM(
+                        transcripcion_id=transcripcion.id,
+                        parametros_json=resultado.parametros_json,
+                        version_modelo=resultado.version_modelo,
+                    )
+                )
+            else:
+                extraccion.parametros_json = resultado.parametros_json
+                extraccion.version_modelo = resultado.version_modelo
 
         fila.estado_sincronizacion = "sincronizado"
         fila.fecha_sincronizacion = utcnow()
