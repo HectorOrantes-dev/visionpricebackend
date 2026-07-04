@@ -2,6 +2,7 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.config import settings
 from src.core.database import get_session
 from src.features.cotizaciones.application.calcular_areas import CalcularAreas
 from src.features.cotizaciones.application.crear_cotizacion import CrearCotizacion
@@ -34,6 +35,7 @@ def get_crear_cotizacion(
     return CrearCotizacion(
         repo=SqlAlchemyCotizacionRepository(session),
         proveedores=ProvidersAdapter(),
+        merma=settings.cotizacion_merma,
     )
 
 

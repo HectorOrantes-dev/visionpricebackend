@@ -7,13 +7,13 @@ y convierte m² → cantidad con el rendimiento de cada producto:
     cantidad = ceil(area_m2 / rendimiento_m2)
     subtotal = cantidad × precio_unitario
 """
-import math
 from dataclasses import dataclass
 
 from src.features.cotizaciones.domain.entities import (
     Cotizacion,
     LineaCotizacion,
 )
+from src.features.cotizaciones.domain.motor_materiales import calcular_material
 from src.features.cotizaciones.domain.ports import (
     CotizacionRepository,
     ProveedoresPort,
@@ -38,16 +38,20 @@ class CrearCotizacionCommand:
 
 class CrearCotizacion:
     def __init__(
-        self, repo: CotizacionRepository, proveedores: ProveedoresPort
+        self,
+        repo: CotizacionRepository,
+        proveedores: ProveedoresPort,
+        merma: float = 0.08,
     ) -> None:
         self._repo = repo
         self._proveedores = proveedores
+        self._merma = merma
 
     async def execute(self, cmd: CrearCotizacionCommand) -> Cotizacion:
         if not cmd.items:
             raise ValidationError("La cotización no tiene productos.")
 
-        # Precios/rendimiento frescos desde el micro de Proveedores.
+        # Precios/atributos frescos desde el micro de Proveedores.
         ids = [it.producto_id for it in cmd.items]
         productos = {p.producto_id: p for p in await self._proveedores.productos_por_ids(ids)}
 
@@ -60,19 +64,20 @@ class CrearCotizacion:
                 )
 
             area = self._area_para(item.aplicar_a, cmd)
-            rendimiento = prod.rendimiento_m2 or 1.0
-            cantidad = math.ceil(area / rendimiento) if rendimiento > 0 else area
-            subtotal = round(cantidad * prod.precio_unitario, 2)
+            calc = calcular_material(area, prod, merma=self._merma)
+            subtotal = round(calc.cantidad * prod.precio_unitario, 2)
 
             lineas.append(
                 LineaCotizacion(
                     material_id=prod.producto_id,
                     proveedor_id=prod.proveedor_id,
-                    descripcion=f"{prod.nombre} ({item.aplicar_a})",
-                    cantidad=cantidad,
-                    unidad=prod.unidad,
+                    descripcion=f"{prod.nombre} ({item.aplicar_a}) — {calc.detalle}",
+                    cantidad=calc.cantidad,
+                    unidad=calc.unidad,
                     precio_unitario=prod.precio_unitario,
                     subtotal=subtotal,
+                    piezas=calc.piezas,
+                    area_m2=area,
                 )
             )
 

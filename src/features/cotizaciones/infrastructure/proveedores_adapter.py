@@ -10,19 +10,25 @@ from src.microservices.providers_gateway import ProvidersGateway
 
 def _to_producto(d: dict) -> ProductoCercano:
     prov = d.get("proveedor") or {}
+    def _f(key: str) -> float | None:
+        return float(d[key]) if d.get(key) is not None else None
+
     return ProductoCercano(
         producto_id=int(d.get("producto_id") or d.get("id")),
         nombre=d.get("nombre", ""),
         categoria=d.get("categoria", ""),
         unidad=d.get("unidad", "pieza"),
         precio_unitario=float(d.get("precio_unitario", 0) or 0),
-        rendimiento_m2=(
-            float(d["rendimiento_m2"]) if d.get("rendimiento_m2") is not None else None
-        ),
+        rendimiento_m2=_f("rendimiento_m2"),
         proveedor_id=prov.get("proveedor_id") or d.get("proveedor_id"),
         proveedor_nombre=prov.get("nombre") or d.get("proveedor_nombre"),
         distancia_km=(
             float(prov["distancia_km"]) if prov.get("distancia_km") is not None else None
+        ),
+        pieza_largo_m=_f("pieza_largo_m"),
+        pieza_ancho_m=_f("pieza_ancho_m"),
+        piezas_por_caja=(
+            int(d["piezas_por_caja"]) if d.get("piezas_por_caja") is not None else None
         ),
     )
 

@@ -92,6 +92,8 @@ class Settings(BaseSettings):
     providers_base_url: str = ""
     providers_api_key: str = ""
     providers_radio_km_default: float = 10.0
+    # Merma/desperdicio por defecto para el cálculo de losetas (8%).
+    cotizacion_merma: float = 0.08
 
     # --- Webhooks/callbacks ENTRANTES (servicio -> esta API) ---
     # Los microservicios de ML y Pagos llaman de vuelta con este X-Api-Key.

@@ -31,6 +31,9 @@ class ProductoCercanoOut(BaseModel):
     proveedor_id: int | None
     proveedor_nombre: str | None
     distancia_km: float | None
+    pieza_largo_m: float | None = None
+    pieza_ancho_m: float | None = None
+    piezas_por_caja: int | None = None
 
 
 # --- Crear cotización ---
@@ -54,6 +57,8 @@ class LineaOut(BaseModel):
     unidad: str
     precio_unitario: float
     subtotal: float
+    piezas: int | None = None
+    area_m2: float | None = None
 
 
 class CotizacionOut(BaseModel):

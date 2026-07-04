@@ -31,6 +31,10 @@ class ProductoCercano:
     proveedor_id: int | None
     proveedor_nombre: str | None
     distancia_km: float | None
+    # Para losetas/cerámica (opcional): dimensiones de la pieza y piezas por caja.
+    pieza_largo_m: float | None = None
+    pieza_ancho_m: float | None = None
+    piezas_por_caja: int | None = None
 
 
 @dataclass
@@ -42,6 +46,9 @@ class LineaCotizacion:
     unidad: str
     precio_unitario: float
     subtotal: float
+    # Desglose del cálculo (no se persiste; se muestra en la respuesta/PDF).
+    piezas: int | None = None
+    area_m2: float | None = None
 
 
 @dataclass
