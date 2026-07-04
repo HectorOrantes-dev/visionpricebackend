@@ -70,10 +70,9 @@ class ExtractionsGateway:
         Devuelve el ack del microservicio (idealmente con object_storage_key).
         """
         self._ensure_config()
-        data = {
-            "grabacion_id": str(grabacion_id),
-            "user_hash": user_hash,
-        }
+        # Contrato exacto del micro: grabacion_id, proyecto_id, audio (multipart).
+        # (user_hash es legado del micro anterior; ya no se envía.)
+        data = {"grabacion_id": str(grabacion_id)}
         if proyecto_id is not None:
             data["proyecto_id"] = str(proyecto_id)
         try:

@@ -28,8 +28,13 @@ from src.features.grabaciones.infrastructure.schemas import (
 )
 from src.oauth.dependencies import CurrentUser, get_current_user
 from src.oauth.internal import require_internal_key
+from src.shared.rate_limit import rate_limit
 
 router = APIRouter(tags=["grabaciones"])
+
+# Sondeo de estado: máx. 20 peticiones cada 30 s por usuario+grabación
+# (permite sondear cada ~2 s; frena tormentas de polling del cliente).
+_limite_sondeo = rate_limit(20, 30)
 
 
 @router.get(
@@ -38,7 +43,7 @@ router = APIRouter(tags=["grabaciones"])
     summary="Historial de mis grabaciones (con estado de sincronización)",
 )
 async def listar_grabaciones(
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(_limite_sondeo),
     use_case: ListarGrabaciones = Depends(get_listar_grabaciones),
 ) -> list[GrabacionResumenOut]:
     items = await use_case.execute(user.id)
@@ -52,7 +57,7 @@ async def listar_grabaciones(
 )
 async def obtener_grabacion(
     grabacion_id: int,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(_limite_sondeo),
     use_case: ObtenerGrabacion = Depends(get_obtener_grabacion),
 ) -> GrabacionDetalleOut:
     detalle = await use_case.execute(grabacion_id, user.id)

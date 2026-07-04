@@ -90,6 +90,11 @@ class TooManyAttempts(DomainError):
     status_code = 429
 
 
+class TooManyRequests(DomainError):
+    code = "too_many_requests"
+    status_code = 429
+
+
 class UpstreamError(DomainError):
     """Falla al hablar con un microservicio externo."""
 
