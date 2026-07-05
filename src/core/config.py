@@ -81,9 +81,12 @@ class Settings(BaseSettings):
     # Máximo de intentos de código por desafío (anti fuerza bruta).
     two_factor_max_intentos: int = 5
 
-    # --- Microservicio de Extracciones ---
+    # --- Microservicio de Extracciones (ML) ---
     extractions_base_url: str = ""
     extractions_api_key: str = ""
+    extractions_timeout: int = 60
+    # Reintentos ante fallos TRANSITORIOS del micro (502/503/504, conexión).
+    extractions_max_reintentos: int = 2
 
     # --- Microservicio de Pagos ---
     payments_base_url: str = ""

@@ -1,11 +1,20 @@
 """Gateway al microservicio de Extracciones (audio -> JSON estructurado).
 
 Autenticación servicio-a-servicio con header X-Api-Key (MICROSERVICE_API_KEY).
+Reintenta ante fallos transitorios del micro (502/503/504, conexión).
 """
+import asyncio
+import logging
+
 import httpx
 
 from src.core.config import settings
 from src.shared.errors import UpstreamError
+
+_log = logging.getLogger("extractions.gateway")
+
+# Estados HTTP que suelen ser transitorios (micro reiniciando / saturado).
+_TRANSITORIOS = {502, 503, 504}
 
 
 class ExtractionsGateway:
@@ -13,11 +22,17 @@ class ExtractionsGateway:
         self,
         base_url: str | None = None,
         api_key: str | None = None,
-        timeout: int = 60,
+        timeout: int | None = None,
+        max_reintentos: int | None = None,
     ) -> None:
         self._base = (base_url or settings.extractions_base_url).rstrip("/")
         self._api_key = api_key or settings.extractions_api_key
-        self._timeout = timeout
+        self._timeout = timeout or settings.extractions_timeout
+        self._max_reintentos = (
+            max_reintentos
+            if max_reintentos is not None
+            else settings.extractions_max_reintentos
+        )
 
     @property
     def _headers(self) -> dict[str, str]:
@@ -75,25 +90,44 @@ class ExtractionsGateway:
         data = {"grabacion_id": str(grabacion_id)}
         if proyecto_id is not None:
             data["proyecto_id"] = str(proyecto_id)
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                resp = await client.post(
-                    f"{self._base}/extractions/",
-                    headers=self._headers,
-                    data=data,
-                    files={"audio": (filename, audio, content_type)},
+
+        ultimo_error: UpstreamError | None = None
+        for intento in range(self._max_reintentos + 1):
+            try:
+                async with httpx.AsyncClient(timeout=self._timeout) as client:
+                    resp = await client.post(
+                        f"{self._base}/extractions/",
+                        headers=self._headers,
+                        data=data,
+                        files={"audio": (filename, audio, content_type)},
+                    )
+            except httpx.HTTPError as exc:
+                ultimo_error = UpstreamError(
+                    "No se pudo contactar al servicio de Extracciones.",
+                    details={"upstream": str(exc)},
                 )
-        except httpx.HTTPError as exc:
-            raise UpstreamError(
-                "No se pudo contactar al servicio de Extracciones.",
-                details={"upstream": str(exc)},
-            ) from exc
-        if resp.status_code >= 400:
-            raise UpstreamError(
-                "El servicio de Extracciones devolvió error.",
-                details={"status": resp.status_code, "body": _safe(resp)},
-            )
-        return resp.json()
+            else:
+                if resp.status_code < 400:
+                    return resp.json()
+                ultimo_error = UpstreamError(
+                    "El servicio de Extracciones devolvió error.",
+                    details={"status": resp.status_code, "body": _safe(resp)},
+                )
+                # Solo reintenta fallos transitorios; 4xx (mal request) no.
+                if resp.status_code not in _TRANSITORIOS:
+                    raise ultimo_error
+
+            if intento < self._max_reintentos:
+                espera = 2 ** intento  # backoff: 1s, 2s, 4s...
+                _log.warning(
+                    "Extracciones falló (intento %s/%s), reintentando en %ss...",
+                    intento + 1,
+                    self._max_reintentos + 1,
+                    espera,
+                )
+                await asyncio.sleep(espera)
+
+        raise ultimo_error  # se agotaron los reintentos
 
     async def list_by_user(self, user_hash: str) -> dict | list:
         self._ensure_config()
