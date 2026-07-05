@@ -40,8 +40,11 @@ def parse_dimensiones(texto: str) -> Dimensiones:
     t = _sustituir_palabras(texto.lower())
     largo = ancho = alto = None
 
-    # "A x B", "A por B", "A * B"
-    m = re.search(rf"{_NUM}\s*(?:x|por|\*)\s*{_NUM}", t)
+    # "A x B", "A por B", "A * B" — tolerante a la unidad y a las comas que
+    # el transcriptor mete entre el número y el conector ("2 metros, por 2").
+    m = re.search(
+        rf"{_NUM}\s*(?:metros?|mts?|m)?\s*[,.]?\s*(?:x|por|\*)\s*{_NUM}", t
+    )
     if m:
         largo = _to_float(m.group(1))
         ancho = _to_float(m.group(2))
