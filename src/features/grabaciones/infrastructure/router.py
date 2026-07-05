@@ -1,4 +1,6 @@
 """Router de grabaciones: alta de audio + consulta (estado/transcripción) + webhook ML."""
+import logging
+
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 
 from src.features.grabaciones.application.consultar_grabaciones import (
@@ -31,6 +33,7 @@ from src.oauth.internal import require_internal_key
 from src.shared.rate_limit import rate_limit
 
 router = APIRouter(tags=["grabaciones"])
+_log = logging.getLogger("grabaciones.callback")
 
 # Sondeo de estado: máx. 20 peticiones cada 30 s por usuario+grabación
 # (permite sondear cada ~2 s; frena tormentas de polling del cliente).
@@ -108,6 +111,12 @@ async def ml_callback(
     body: MLCallbackRequest,
     use_case: ProcesarResultadoML = Depends(get_procesar_resultado_ml),
 ) -> MLCallbackResponse:
+    _log.info(
+        "Callback ML recibido: grabacion_id=%s | len(texto)=%s | extraccion=%s",
+        body.grabacion_id,
+        len(body.texto or ""),
+        body.parametros_json is not None,
+    )
     await use_case.execute(
         ResultadoML(
             grabacion_id=body.grabacion_id,
@@ -119,4 +128,5 @@ async def ml_callback(
             version_modelo=body.version_modelo,
         )
     )
+    _log.info("Grabacion %s marcada como sincronizado", body.grabacion_id)
     return MLCallbackResponse(received=True, grabacion_id=body.grabacion_id)
