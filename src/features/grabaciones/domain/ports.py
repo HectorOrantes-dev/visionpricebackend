@@ -16,6 +16,12 @@ class GrabacionRepository(ABC):
         ...
 
     @abstractmethod
+    async def buscar_por_local_id(
+        self, usuario_id: int, local_id: str
+    ) -> Grabacion | None:
+        """Idempotencia: grabación ya creada con ese local_id (o None)."""
+
+    @abstractmethod
     async def listar_de(self, usuario_id: int) -> list[GrabacionResumen]:
         ...
 

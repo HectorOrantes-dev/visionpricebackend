@@ -9,6 +9,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -110,11 +111,21 @@ class ProyectoColaborador(Base):
 
 class GrabacionAudio(Base):
     __tablename__ = "grabaciones_audio"
+    __table_args__ = (
+        Index(
+            "uq_grabaciones_usuario_local",
+            "usuario_id",
+            "local_id",
+            unique=True,
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     usuario_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("usuarios.id"), nullable=False
     )
+    # Idempotencia de la cola offline: UUID que genera la app por grabación.
+    local_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     proyecto_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("proyectos.id"), nullable=True
     )

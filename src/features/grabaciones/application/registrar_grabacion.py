@@ -6,13 +6,14 @@ microservicio de ML en su object storage.
 """
 import hashlib
 from dataclasses import dataclass
+from datetime import datetime
 
 from src.features.grabaciones.domain.entities import Grabacion, NuevaGrabacion
 from src.features.grabaciones.domain.ports import (
     AudioSubmissionPort,
     GrabacionRepository,
 )
-from src.shared.timeutils import utcnow
+from src.shared.timeutils import to_naive_utc, utcnow
 
 
 @dataclass
@@ -24,6 +25,8 @@ class RegistrarGrabacionCommand:
     content_type: str
     audio: bytes
     duracion_segundos: int | None = None
+    local_id: str | None = None
+    fecha_grabacion: datetime | None = None
 
 
 class RegistrarGrabacion:
@@ -34,13 +37,24 @@ class RegistrarGrabacion:
         self._audio = audio_port
 
     async def execute(self, cmd: RegistrarGrabacionCommand) -> Grabacion:
+        # Idempotencia (cola offline): si ya subió con ese local_id, devuelve la
+        # existente sin reprocesar el audio.
+        if cmd.local_id:
+            existente = await self._repo.buscar_por_local_id(
+                cmd.usuario_id, cmd.local_id
+            )
+            if existente is not None:
+                return existente
+
         grabacion = await self._repo.crear(
             NuevaGrabacion(
                 usuario_id=cmd.usuario_id,
                 proyecto_id=cmd.proyecto_id,
                 duracion_segundos=cmd.duracion_segundos,
                 hash_archivo=hashlib.sha256(cmd.audio).hexdigest(),
-                fecha_grabacion=utcnow(),
+                # Fecha REAL de la grabación (la manda la app); si no, ahora.
+                fecha_grabacion=to_naive_utc(cmd.fecha_grabacion) or utcnow(),
+                local_id=cmd.local_id,
             )
         )
 

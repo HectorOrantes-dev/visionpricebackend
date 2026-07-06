@@ -1,5 +1,6 @@
 """Router de grabaciones: alta de audio + consulta (estado/transcripción) + webhook ML."""
 import logging
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 
@@ -94,6 +95,12 @@ async def editar_transcripcion(
 async def crear_grabacion(
     proyecto_id: int = Form(..., description="Obligatorio: el micro de ML lo exige"),
     duracion_segundos: int | None = Form(default=None),
+    local_id: str | None = Form(
+        default=None, description="UUID de la app (idempotencia de cola offline)"
+    ),
+    fecha_grabacion: datetime | None = Form(
+        default=None, description="Fecha real de grabación (ISO 8601)"
+    ),
     audio: UploadFile = File(...),
     user: CurrentUser = Depends(get_current_user),
     use_case: RegistrarGrabacion = Depends(get_registrar_grabacion),
@@ -108,6 +115,8 @@ async def crear_grabacion(
             content_type=audio.content_type or "application/octet-stream",
             audio=contenido,
             duracion_segundos=duracion_segundos,
+            local_id=local_id,
+            fecha_grabacion=fecha_grabacion,
         )
     )
     return GrabacionOut(

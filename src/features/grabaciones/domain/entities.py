@@ -10,6 +10,7 @@ class NuevaGrabacion:
     duracion_segundos: int | None
     hash_archivo: str | None
     fecha_grabacion: datetime
+    local_id: str | None = None
 
 
 @dataclass

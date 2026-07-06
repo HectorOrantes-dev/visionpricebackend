@@ -15,6 +15,16 @@ from src.shared.models import ExtraccionLLM, GrabacionAudio, Transcripcion
 from src.shared.timeutils import utcnow
 
 
+def _to_grabacion(m: GrabacionAudio) -> Grabacion:
+    return Grabacion(
+        id=m.id,
+        usuario_id=m.usuario_id,
+        proyecto_id=m.proyecto_id,
+        object_storage_key=m.object_storage_key,
+        estado_sincronizacion=m.estado_sincronizacion,
+    )
+
+
 class SqlAlchemyGrabacionRepository(GrabacionRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -22,6 +32,7 @@ class SqlAlchemyGrabacionRepository(GrabacionRepository):
     async def crear(self, nueva: NuevaGrabacion) -> Grabacion:
         fila = GrabacionAudio(
             usuario_id=nueva.usuario_id,
+            local_id=nueva.local_id,
             proyecto_id=nueva.proyecto_id,
             duracion_segundos=nueva.duracion_segundos,
             hash_archivo=nueva.hash_archivo,
@@ -31,13 +42,19 @@ class SqlAlchemyGrabacionRepository(GrabacionRepository):
         self._session.add(fila)
         await self._session.commit()
         await self._session.refresh(fila)
-        return Grabacion(
-            id=fila.id,
-            usuario_id=fila.usuario_id,
-            proyecto_id=fila.proyecto_id,
-            object_storage_key=fila.object_storage_key,
-            estado_sincronizacion=fila.estado_sincronizacion,
+        return _to_grabacion(fila)
+
+    async def buscar_por_local_id(
+        self, usuario_id: int, local_id: str
+    ) -> Grabacion | None:
+        result = await self._session.execute(
+            select(GrabacionAudio).where(
+                GrabacionAudio.usuario_id == usuario_id,
+                GrabacionAudio.local_id == local_id,
+            )
         )
+        fila = result.scalar_one_or_none()
+        return _to_grabacion(fila) if fila else None
 
     async def listar_de(self, usuario_id: int) -> list[GrabacionResumen]:
         result = await self._session.execute(
