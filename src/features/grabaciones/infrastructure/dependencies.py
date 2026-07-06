@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_session
 from src.features.grabaciones.application.consultar_grabaciones import (
+    EditarTranscripcion,
     ListarGrabaciones,
     ObtenerGrabacion,
 )
@@ -46,3 +47,9 @@ def get_obtener_grabacion(
     session: AsyncSession = Depends(get_session),
 ) -> ObtenerGrabacion:
     return ObtenerGrabacion(repo=SqlAlchemyGrabacionRepository(session))
+
+
+def get_editar_transcripcion(
+    session: AsyncSession = Depends(get_session),
+) -> EditarTranscripcion:
+    return EditarTranscripcion(repo=SqlAlchemyGrabacionRepository(session))

@@ -4,6 +4,7 @@ import logging
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 
 from src.features.grabaciones.application.consultar_grabaciones import (
+    EditarTranscripcion,
     ListarGrabaciones,
     ObtenerGrabacion,
 )
@@ -16,12 +17,14 @@ from src.features.grabaciones.application.registrar_grabacion import (
 )
 from src.features.grabaciones.domain.entities import ResultadoML
 from src.features.grabaciones.infrastructure.dependencies import (
+    get_editar_transcripcion,
     get_listar_grabaciones,
     get_obtener_grabacion,
     get_procesar_resultado_ml,
     get_registrar_grabacion,
 )
 from src.features.grabaciones.infrastructure.schemas import (
+    EditarTranscripcionRequest,
     GrabacionDetalleOut,
     GrabacionOut,
     GrabacionResumenOut,
@@ -64,6 +67,21 @@ async def obtener_grabacion(
     use_case: ObtenerGrabacion = Depends(get_obtener_grabacion),
 ) -> GrabacionDetalleOut:
     detalle = await use_case.execute(grabacion_id, user.id)
+    return GrabacionDetalleOut(**detalle.__dict__)
+
+
+@router.patch(
+    "/grabaciones/{grabacion_id}/transcripcion",
+    response_model=GrabacionDetalleOut,
+    summary="Editar/corregir el texto de la transcripción",
+)
+async def editar_transcripcion(
+    grabacion_id: int,
+    body: EditarTranscripcionRequest,
+    user: CurrentUser = Depends(get_current_user),
+    use_case: EditarTranscripcion = Depends(get_editar_transcripcion),
+) -> GrabacionDetalleOut:
+    detalle = await use_case.execute(grabacion_id, user.id, body.texto)
     return GrabacionDetalleOut(**detalle.__dict__)
 
 

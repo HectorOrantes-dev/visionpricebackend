@@ -26,6 +26,12 @@ class GrabacionRepository(ABC):
         ...
 
     @abstractmethod
+    async def actualizar_transcripcion(
+        self, grabacion_id: int, usuario_id: int, texto: str
+    ) -> bool:
+        """Edita el texto de la transcripción (solo dueño). False si no aplica."""
+
+    @abstractmethod
     async def marcar_enviada(
         self, grabacion_id: int, object_storage_key: str | None
     ) -> None:

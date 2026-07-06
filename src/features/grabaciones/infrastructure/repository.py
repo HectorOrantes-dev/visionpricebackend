@@ -112,6 +112,24 @@ class SqlAlchemyGrabacionRepository(GrabacionRepository):
             await self._session.delete(fila)
             await self._session.commit()
 
+    async def actualizar_transcripcion(
+        self, grabacion_id: int, usuario_id: int, texto: str
+    ) -> bool:
+        g = await self._session.get(GrabacionAudio, grabacion_id)
+        if g is None or g.usuario_id != usuario_id:
+            return False
+        result = await self._session.execute(
+            select(Transcripcion).where(
+                Transcripcion.grabacion_id == grabacion_id
+            )
+        )
+        transcripcion = result.scalar_one_or_none()
+        if transcripcion is None:
+            return False
+        transcripcion.texto = texto
+        await self._session.commit()
+        return True
+
     async def marcar_enviada(
         self, grabacion_id: int, object_storage_key: str | None
     ) -> None:

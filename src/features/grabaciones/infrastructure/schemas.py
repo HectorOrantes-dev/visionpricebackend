@@ -22,6 +22,10 @@ class GrabacionResumenOut(BaseModel):
     tiene_transcripcion: bool
 
 
+class EditarTranscripcionRequest(BaseModel):
+    texto: str = Field(min_length=1, max_length=10000)
+
+
 class GrabacionDetalleOut(BaseModel):
     id: int
     proyecto_id: int | None
