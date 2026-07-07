@@ -24,7 +24,12 @@ from src.shared.errors import ValidationError
 @dataclass
 class ItemSeleccionado:
     producto_id: int
-    aplicar_a: str  # "piso" | "pared"
+    # Una de las dos formas de indicar el área de la superficie:
+    #   - area_m2: superficie explícita (soporta N superficies del ML)
+    #   - aplicar_a: atajo "piso"/"pared" que toma piso_m2/paredes_m2 del comando
+    area_m2: float | None = None
+    aplicar_a: str | None = None
+    descripcion: str | None = None  # etiqueta de la superficie (ej. "piso sala")
 
 
 @dataclass
@@ -63,15 +68,20 @@ class CrearCotizacion:
                     f"Producto {item.producto_id} no disponible en proveedores."
                 )
 
-            area = self._area_para(item.aplicar_a, cmd)
+            area = (
+                item.area_m2
+                if item.area_m2 is not None
+                else self._area_para(item.aplicar_a, cmd)
+            )
             calc = calcular_material(area, prod, merma=self._merma)
             subtotal = round(calc.cantidad * prod.precio_unitario, 2)
+            etiqueta = item.descripcion or item.aplicar_a or "superficie"
 
             lineas.append(
                 LineaCotizacion(
                     material_id=prod.producto_id,
                     proveedor_id=prod.proveedor_id,
-                    descripcion=f"{prod.nombre} ({item.aplicar_a}) — {calc.detalle}",
+                    descripcion=f"{prod.nombre} ({etiqueta}) — {calc.detalle}",
                     cantidad=calc.cantidad,
                     unidad=calc.unidad,
                     precio_unitario=prod.precio_unitario,
@@ -90,7 +100,7 @@ class CrearCotizacion:
         )
 
     @staticmethod
-    def _area_para(aplicar_a: str, cmd: CrearCotizacionCommand) -> float:
+    def _area_para(aplicar_a: str | None, cmd: CrearCotizacionCommand) -> float:
         if aplicar_a == "piso":
             if not cmd.piso_m2:
                 raise ValidationError("Falta piso_m2 para un producto de piso.")
@@ -99,4 +109,6 @@ class CrearCotizacion:
             if not cmd.paredes_m2:
                 raise ValidationError("Falta paredes_m2 para un producto de pared.")
             return cmd.paredes_m2
-        raise ValidationError(f"aplicar_a inválido: {aplicar_a!r} (piso|pared).")
+        raise ValidationError(
+            "Cada ítem necesita 'area_m2' o 'aplicar_a' (piso|pared)."
+        )

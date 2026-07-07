@@ -100,7 +100,12 @@ async def crear(
             piso_m2=body.piso_m2,
             paredes_m2=body.paredes_m2,
             items=[
-                ItemSeleccionado(producto_id=i.producto_id, aplicar_a=i.aplicar_a)
+                ItemSeleccionado(
+                    producto_id=i.producto_id,
+                    area_m2=i.area_m2,
+                    aplicar_a=i.aplicar_a,
+                    descripcion=i.descripcion,
+                )
                 for i in body.items
             ],
         )

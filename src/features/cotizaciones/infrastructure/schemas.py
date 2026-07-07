@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # --- Cálculo de m² ---
@@ -39,7 +39,16 @@ class ProductoCercanoOut(BaseModel):
 # --- Crear cotización ---
 class ItemRequest(BaseModel):
     producto_id: int
-    aplicar_a: Literal["piso", "pared"]
+    # Indica el área con UNA de las dos (area_m2 tiene prioridad):
+    area_m2: float | None = Field(default=None, gt=0)
+    aplicar_a: Literal["piso", "pared"] | None = None
+    descripcion: str | None = Field(default=None, max_length=150)
+
+    @model_validator(mode="after")
+    def _tiene_area(self) -> "ItemRequest":
+        if self.area_m2 is None and self.aplicar_a is None:
+            raise ValueError("Cada ítem necesita area_m2 o aplicar_a.")
+        return self
 
 
 class CrearCotizacionRequest(BaseModel):
