@@ -33,7 +33,7 @@ class ProductoCercano:
     proveedor_nombre: str | None
     proveedor_lat: float | None = None
     proveedor_lng: float | None = None
-    distancia_km: float | None
+    distancia_km: float | None = None
 
 
 @dataclass
