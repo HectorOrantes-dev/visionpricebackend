@@ -23,7 +23,7 @@ from src.shared.errors import ValidationError
 
 @dataclass
 class ItemSeleccionado:
-    producto_id: int
+    producto_id: str
     # Una de las dos formas de indicar el área de la superficie:
     #   - area_m2: superficie explícita (soporta N superficies del ML)
     #   - aplicar_a: atajo "piso"/"pared" que toma piso_m2/paredes_m2 del comando

@@ -43,6 +43,6 @@ class ProvidersAdapter(ProveedoresPort):
         )
         return [_to_producto(d) for d in data]
 
-    async def productos_por_ids(self, ids: list[int]) -> list[ProductoCercano]:
+    async def productos_por_ids(self, ids: list[str]) -> list[ProductoCercano]:
         data = await self._gateway.productos_por_ids(ids)
         return [_to_producto(d) for d in data]

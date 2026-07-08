@@ -68,7 +68,7 @@ class ProvidersGateway:
             params["categoria"] = categoria
         return await self._get("/productos/cercanos", params)
 
-    async def productos_por_ids(self, ids: list[int]) -> list[dict]:
+    async def productos_por_ids(self, ids: list[str]) -> list[dict]:
         if not ids:
             return []
         return await self._get(

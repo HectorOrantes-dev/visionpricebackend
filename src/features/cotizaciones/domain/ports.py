@@ -23,7 +23,7 @@ class ProveedoresPort(ABC):
         ...
 
     @abstractmethod
-    async def productos_por_ids(self, ids: list[int]) -> list[ProductoCercano]:
+    async def productos_por_ids(self, ids: list[str]) -> list[ProductoCercano]:
         ...
 
 
