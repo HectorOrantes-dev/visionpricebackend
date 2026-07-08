@@ -23,6 +23,8 @@ def _to_producto(d: dict) -> ProductoCercano:
         image_url=d.get("image_url"),
         proveedor_id=prov.get("proveedor_id") or d.get("proveedor_id"),
         proveedor_nombre=prov.get("nombre") or d.get("proveedor_nombre"),
+        proveedor_lat=float(prov["lat"]) if prov.get("lat") is not None else None,
+        proveedor_lng=float(prov["lng"]) if prov.get("lng") is not None else None,
         distancia_km=(
             float(prov["distancia_km"]) if prov.get("distancia_km") is not None else None
         ),

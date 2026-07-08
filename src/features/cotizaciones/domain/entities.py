@@ -31,6 +31,8 @@ class ProductoCercano:
     image_url: str | None
     proveedor_id: int | None
     proveedor_nombre: str | None
+    proveedor_lat: float | None = None
+    proveedor_lng: float | None = None
     distancia_km: float | None
 
 
