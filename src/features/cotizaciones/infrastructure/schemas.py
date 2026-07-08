@@ -22,14 +22,14 @@ class CalculoOut(BaseModel):
 
 # --- Productos cercanos ---
 class ProductoCercanoOut(BaseModel):
-    producto_id: int
+    producto_id: str
     nombre: str
     categoria: str
     unidad: str
     precio_unitario: float
     rendimiento_m2: float | None
     image_url: str | None = None
-    proveedor_id: int | None
+    proveedor_id: str | None
     proveedor_nombre: str | None
     proveedor_lat: float | None = None
     proveedor_lng: float | None = None
@@ -38,7 +38,7 @@ class ProductoCercanoOut(BaseModel):
 
 # --- Crear cotización ---
 class ItemRequest(BaseModel):
-    producto_id: int
+    producto_id: str
     # Indica el área con UNA de las dos (area_m2 tiene prioridad):
     area_m2: float | None = Field(default=None, gt=0)
     aplicar_a: Literal["piso", "pared"] | None = None
@@ -59,8 +59,8 @@ class CrearCotizacionRequest(BaseModel):
 
 
 class LineaOut(BaseModel):
-    material_id: int | None
-    proveedor_id: int | None
+    material_id: str | None
+    proveedor_id: str | None
     descripcion: str
     cantidad: float
     unidad: str

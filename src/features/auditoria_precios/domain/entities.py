@@ -8,7 +8,7 @@ from src.features.auditoria_precios.domain.estadistica import AnalisisPrecio
 class LineaPrecio:
     detalle_id: int
     presupuesto_id: int
-    material_id: int | None
+    material_id: str | None
     descripcion: str
     precio_unitario: float
 
@@ -17,7 +17,7 @@ class LineaPrecio:
 class LineaAuditada:
     detalle_id: int
     presupuesto_id: int
-    material_id: int | None
+    material_id: str | None
     descripcion: str
     precio_unitario: float
     analisis: AnalisisPrecio

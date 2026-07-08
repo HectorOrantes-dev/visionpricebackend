@@ -14,14 +14,14 @@ def _to_producto(d: dict) -> ProductoCercano:
         return float(d[key]) if d.get(key) is not None else None
 
     return ProductoCercano(
-        producto_id=int(d.get("producto_id") or d.get("id")),
+        producto_id=str(d.get("producto_id") or d.get("id")),
         nombre=d.get("nombre", ""),
         categoria=d.get("categoria", ""),
         unidad=d.get("unidad", "pieza"),
         precio_unitario=float(d.get("precio_unitario", 0) or 0),
         rendimiento_m2=_f("rendimiento_m2"),
         image_url=d.get("image_url"),
-        proveedor_id=prov.get("proveedor_id") or d.get("proveedor_id"),
+        proveedor_id=str(prov.get("proveedor_id") or d.get("proveedor_id")) if (prov.get("proveedor_id") or d.get("proveedor_id")) else None,
         proveedor_nombre=prov.get("nombre") or d.get("proveedor_nombre"),
         proveedor_lat=float(prov["lat"]) if prov.get("lat") is not None else None,
         proveedor_lng=float(prov["lng"]) if prov.get("lng") is not None else None,

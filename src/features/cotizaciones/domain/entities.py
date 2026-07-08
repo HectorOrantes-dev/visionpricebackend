@@ -22,14 +22,14 @@ class CalculoAreas:
 
 @dataclass
 class ProductoCercano:
-    producto_id: int
+    producto_id: str
     nombre: str
     categoria: str
     unidad: str
     precio_unitario: float
     rendimiento_m2: float | None
     image_url: str | None
-    proveedor_id: int | None
+    proveedor_id: str | None
     proveedor_nombre: str | None
     proveedor_lat: float | None = None
     proveedor_lng: float | None = None
@@ -38,8 +38,8 @@ class ProductoCercano:
 
 @dataclass
 class LineaCotizacion:
-    material_id: int | None
-    proveedor_id: int | None
+    material_id: str | None
+    proveedor_id: str | None
     descripcion: str
     cantidad: float
     unidad: str
