@@ -28,13 +28,10 @@ class ProductoCercano:
     unidad: str
     precio_unitario: float
     rendimiento_m2: float | None
+    image_url: str | None
     proveedor_id: int | None
     proveedor_nombre: str | None
     distancia_km: float | None
-    # Para losetas/cerámica (opcional): dimensiones de la pieza y piezas por caja.
-    pieza_largo_m: float | None = None
-    pieza_ancho_m: float | None = None
-    piezas_por_caja: int | None = None
 
 
 @dataclass

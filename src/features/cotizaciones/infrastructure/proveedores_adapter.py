@@ -20,15 +20,11 @@ def _to_producto(d: dict) -> ProductoCercano:
         unidad=d.get("unidad", "pieza"),
         precio_unitario=float(d.get("precio_unitario", 0) or 0),
         rendimiento_m2=_f("rendimiento_m2"),
+        image_url=d.get("image_url"),
         proveedor_id=prov.get("proveedor_id") or d.get("proveedor_id"),
         proveedor_nombre=prov.get("nombre") or d.get("proveedor_nombre"),
         distancia_km=(
             float(prov["distancia_km"]) if prov.get("distancia_km") is not None else None
-        ),
-        pieza_largo_m=_f("pieza_largo_m"),
-        pieza_ancho_m=_f("pieza_ancho_m"),
-        piezas_por_caja=(
-            int(d["piezas_por_caja"]) if d.get("piezas_por_caja") is not None else None
         ),
     )
 
