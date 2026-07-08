@@ -15,7 +15,7 @@ class AnalisisOut(BaseModel):
 class LineaAuditadaOut(BaseModel):
     detalle_id: int
     presupuesto_id: int
-    material_id: int | None
+    material_id: str | None
     descripcion: str
     precio_unitario: float
     analisis: AnalisisOut

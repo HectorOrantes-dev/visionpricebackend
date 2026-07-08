@@ -18,7 +18,7 @@ class AuditoriaRepository(ABC):
     @abstractmethod
     async def historico_precios(
         self,
-        material_id: int,
+        material_id: str,
         *,
         lat: float | None,
         lng: float | None,
