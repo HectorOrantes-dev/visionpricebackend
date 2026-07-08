@@ -20,7 +20,7 @@ def _to_producto(d: dict) -> ProductoCercano:
         unidad=d.get("unidad", "pieza"),
         precio_unitario=float(d.get("precio_unitario", 0) or 0),
         rendimiento_m2=_f("rendimiento_m2"),
-        image_url=d.get("image_url"),
+        image_url=d.get("image_url") if d.get("image_url") else None,
         proveedor_id=str(prov.get("proveedor_id") or d.get("proveedor_id")) if (prov.get("proveedor_id") or d.get("proveedor_id")) else None,
         proveedor_nombre=prov.get("nombre") or d.get("proveedor_nombre"),
         proveedor_lat=float(prov["lat"]) if prov.get("lat") is not None else None,
