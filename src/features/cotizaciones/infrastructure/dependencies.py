@@ -6,6 +6,7 @@ from src.core.config import settings
 from src.core.database import get_session
 from src.features.cotizaciones.application.calcular_areas import CalcularAreas
 from src.features.cotizaciones.application.crear_cotizacion import CrearCotizacion
+from src.features.cotizaciones.application.crear_kit import CrearCotizacionKit
 from src.features.cotizaciones.application.generar_pdf import GenerarPdf
 from src.features.cotizaciones.application.listar_productos import (
     ListarProductosCercanos,
@@ -33,6 +34,16 @@ def get_crear_cotizacion(
     session: AsyncSession = Depends(get_session),
 ) -> CrearCotizacion:
     return CrearCotizacion(
+        repo=SqlAlchemyCotizacionRepository(session),
+        proveedores=ProvidersAdapter(),
+        merma=settings.cotizacion_merma,
+    )
+
+
+def get_crear_kit(
+    session: AsyncSession = Depends(get_session),
+) -> CrearCotizacionKit:
+    return CrearCotizacionKit(
         repo=SqlAlchemyCotizacionRepository(session),
         proveedores=ProvidersAdapter(),
         merma=settings.cotizacion_merma,

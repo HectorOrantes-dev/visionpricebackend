@@ -28,6 +28,13 @@ def _to_producto(d: dict) -> ProductoCercano:
         distancia_km=(
             float(prov["distancia_km"]) if prov.get("distancia_km") is not None else None
         ),
+        pieza_largo_m=_f("pieza_largo_m"),
+        pieza_ancho_m=_f("pieza_ancho_m"),
+        piezas_por_paquete=(
+            int(d["piezas_por_paquete"])
+            if d.get("piezas_por_paquete") is not None
+            else None
+        ),
     )
 
 

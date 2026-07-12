@@ -34,6 +34,9 @@ class ProductoCercanoOut(BaseModel):
     proveedor_lat: float | None = None
     proveedor_lng: float | None = None
     distancia_km: float | None
+    pieza_largo_m: float | None = None
+    pieza_ancho_m: float | None = None
+    piezas_por_paquete: int | None = None
 
 
 # --- Crear cotización ---
@@ -56,6 +59,23 @@ class CrearCotizacionRequest(BaseModel):
     piso_m2: float | None = Field(default=None, ge=0)
     paredes_m2: float | None = Field(default=None, ge=0)
     items: list[ItemRequest] = Field(min_length=1)
+
+
+class SuperficieKitRequest(BaseModel):
+    area_m2: float = Field(gt=0)
+    principal_producto_id: str  # la loseta (piso/azulejo/zoclo)
+    descripcion: str | None = Field(default=None, max_length=150)
+    metodo_crucetas: Literal["interseccion", "tradicional", "nivelacion"] = (
+        "tradicional"
+    )
+    adhesivo_producto_id: str | None = None
+    cruceta_producto_id: str | None = None
+    boquilla_producto_id: str | None = None
+
+
+class CrearKitRequest(BaseModel):
+    proyecto_id: int
+    superficies: list[SuperficieKitRequest] = Field(min_length=1)
 
 
 class LineaOut(BaseModel):

@@ -34,6 +34,11 @@ class ProductoCercano:
     proveedor_lat: float | None = None
     proveedor_lng: float | None = None
     distancia_km: float | None = None
+    # Losetas/cerámica: dimensiones de la pieza (para contar piezas → crucetas).
+    pieza_largo_m: float | None = None
+    pieza_ancho_m: float | None = None
+    # Crucetas / productos vendidos por paquete: unidades por paquete.
+    piezas_por_paquete: int | None = None
 
 
 @dataclass

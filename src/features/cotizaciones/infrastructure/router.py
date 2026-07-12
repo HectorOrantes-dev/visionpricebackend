@@ -14,6 +14,11 @@ from src.features.cotizaciones.application.crear_cotizacion import (
     CrearCotizacionCommand,
     ItemSeleccionado,
 )
+from src.features.cotizaciones.application.crear_kit import (
+    CrearCotizacionKit,
+    CrearKitCommand,
+    SuperficieKit,
+)
 from src.features.cotizaciones.application.generar_pdf import GenerarPdf
 from src.features.cotizaciones.application.listar_productos import (
     ListarProductosCercanos,
@@ -22,6 +27,7 @@ from src.features.cotizaciones.application.listar_productos import (
 from src.features.cotizaciones.infrastructure.dependencies import (
     get_calcular_areas,
     get_crear_cotizacion,
+    get_crear_kit,
     get_generar_pdf,
     get_listar_productos,
 )
@@ -30,6 +36,7 @@ from src.features.cotizaciones.infrastructure.schemas import (
     CalculoRequest,
     CotizacionOut,
     CrearCotizacionRequest,
+    CrearKitRequest,
     ProductoCercanoOut,
 )
 from src.oauth.dependencies import CurrentUser, get_current_user
@@ -113,6 +120,55 @@ async def crear(
     await auditor.registrar(
         usuario_id=user.id,
         accion="cotizacion_creada",
+        tabla_afectada="presupuestos",
+        registro_id=cot.id,
+        detalles={"total": cot.total, "proyecto_id": cot.proyecto_id},
+        ip_origen=get_client_ip(request),
+    )
+    return CotizacionOut(
+        id=cot.id,
+        proyecto_id=cot.proyecto_id,
+        estado=cot.estado,
+        total=cot.total,
+        fecha=cot.fecha,
+        lineas=[ln.__dict__ for ln in cot.lineas],
+    )
+
+
+@router.post(
+    "/kit",
+    response_model=CotizacionOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear cotización tipo KIT (loseta + pegazulejo + crucetas + boquilla)",
+)
+async def crear_kit(
+    body: CrearKitRequest,
+    request: Request,
+    user: CurrentUser = Depends(get_current_user),
+    use_case: CrearCotizacionKit = Depends(get_crear_kit),
+    auditor: Auditor = Depends(get_auditor),
+) -> CotizacionOut:
+    cot = await use_case.execute(
+        CrearKitCommand(
+            proyecto_id=body.proyecto_id,
+            usuario_id=user.id,
+            superficies=[
+                SuperficieKit(
+                    area_m2=s.area_m2,
+                    principal_producto_id=s.principal_producto_id,
+                    descripcion=s.descripcion,
+                    metodo_crucetas=s.metodo_crucetas,
+                    adhesivo_producto_id=s.adhesivo_producto_id,
+                    cruceta_producto_id=s.cruceta_producto_id,
+                    boquilla_producto_id=s.boquilla_producto_id,
+                )
+                for s in body.superficies
+            ],
+        )
+    )
+    await auditor.registrar(
+        usuario_id=user.id,
+        accion="cotizacion_kit_creada",
         tabla_afectada="presupuestos",
         registro_id=cot.id,
         detalles={"total": cot.total, "proyecto_id": cot.proyecto_id},
