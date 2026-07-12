@@ -31,12 +31,14 @@ from src.features.cotizaciones.infrastructure.dependencies import (
     get_generar_pdf,
     get_listar_productos,
 )
+from src.features.cotizaciones.domain.reglas_material import todas as reglas_todas
 from src.features.cotizaciones.infrastructure.schemas import (
     CalculoOut,
     CalculoRequest,
     CotizacionOut,
     CrearCotizacionRequest,
     CrearKitRequest,
+    MaterialReglaOut,
     ProductoCercanoOut,
 )
 from src.oauth.dependencies import CurrentUser, get_current_user
@@ -45,6 +47,17 @@ from src.shared.request_utils import get_client_ip
 
 # Cotizar (calcular, ver productos, crear cotización, PDF) lo hacen TODOS los roles.
 router = APIRouter(prefix="/cotizaciones", tags=["cotizaciones"])
+
+
+@router.get(
+    "/materiales",
+    response_model=list[MaterialReglaOut],
+    summary="Reglas por material: si es simple (rendimiento) o kit + complementos",
+)
+async def materiales(
+    _: CurrentUser = Depends(get_current_user),
+) -> list[MaterialReglaOut]:
+    return [MaterialReglaOut(**r.__dict__) for r in reglas_todas()]
 
 
 @router.post(

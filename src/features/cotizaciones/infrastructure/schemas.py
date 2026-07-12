@@ -61,6 +61,13 @@ class CrearCotizacionRequest(BaseModel):
     items: list[ItemRequest] = Field(min_length=1)
 
 
+class MaterialReglaOut(BaseModel):
+    categoria: str
+    metodo_calculo: str          # rendimiento | kit
+    requiere_kit: bool
+    complementos: list[str]
+
+
 class SuperficieKitRequest(BaseModel):
     area_m2: float = Field(gt=0)
     principal_producto_id: str  # la loseta (piso/azulejo/zoclo)
