@@ -5,9 +5,9 @@ Persiste sobre las tablas presupuestos + detalle_presupuesto del esquema.
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.features.cotizaciones.domain.entities import Cotizacion, LineaCotizacion
+from src.features.cotizaciones.domain.entities import Cotizacion, LineaCotizacion, InfoProyectoPdf
 from src.features.cotizaciones.domain.ports import CotizacionRepository
-from src.shared.models import DetallePresupuesto, Presupuesto, Transcripcion
+from src.shared.models import DetallePresupuesto, Presupuesto, Transcripcion, Proyecto, Usuario
 
 
 class SqlAlchemyCotizacionRepository(CotizacionRepository):
@@ -45,6 +45,8 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
                     presupuesto_id=presupuesto.id,
                     material_id=ln.material_id,
                     proveedor_id=ln.proveedor_id,
+                    proveedor_nombre=ln.proveedor_nombre,
+                    proveedor_distancia=ln.proveedor_distancia,
                     descripcion_actividad=ln.descripcion,
                     cantidad=ln.cantidad,
                     unidad_medida=ln.unidad,
@@ -86,6 +88,8 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
             LineaCotizacion(
                 material_id=d.material_id,
                 proveedor_id=d.proveedor_id,
+                proveedor_nombre=d.proveedor_nombre,
+                proveedor_distancia=float(d.proveedor_distancia) if d.proveedor_distancia else None,
                 descripcion=d.descripcion_actividad,
                 cantidad=float(d.cantidad),
                 unidad=d.unidad_medida,
@@ -102,4 +106,74 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
             total=float(presupuesto.total_estimado or 0),
             fecha=presupuesto.fecha_generacion,
             lineas=lineas,
+        )
+
+    async def listar_cotizaciones_de_proyecto(
+        self, proyecto_id: int, usuario_id: int
+    ) -> list[Cotizacion]:
+        result = await self._session.execute(
+            select(Presupuesto).where(
+                Presupuesto.proyecto_id == proyecto_id,
+                Presupuesto.usuario_id == usuario_id,
+                Presupuesto.estado.in_(["borrador", "confirmado"]),
+            ).order_by(Presupuesto.id)
+        )
+        presupuestos = result.scalars().all()
+        if not presupuestos:
+            return []
+            
+        cotizaciones = []
+        for p in presupuestos:
+            det = await self._session.execute(
+                select(DetallePresupuesto)
+                .where(DetallePresupuesto.presupuesto_id == p.id)
+                .order_by(DetallePresupuesto.id)
+            )
+            lineas = [
+                LineaCotizacion(
+                    material_id=d.material_id,
+                    proveedor_id=d.proveedor_id,
+                    proveedor_nombre=d.proveedor_nombre,
+                    proveedor_distancia=float(d.proveedor_distancia) if d.proveedor_distancia else None,
+                    descripcion=d.descripcion_actividad,
+                    cantidad=float(d.cantidad),
+                    unidad=d.unidad_medida,
+                    precio_unitario=float(d.precio_unitario or 0),
+                    subtotal=float(d.subtotal or 0),
+                )
+                for d in det.scalars().all()
+            ]
+            cotizaciones.append(
+                Cotizacion(
+                    id=p.id,
+                    proyecto_id=p.proyecto_id,
+                    usuario_id=p.usuario_id,
+                    estado=p.estado,
+                    total=float(p.total_estimado or 0),
+                    fecha=p.fecha_generacion,
+                    lineas=lineas,
+                )
+            )
+        return cotizaciones
+
+    async def obtener_info_proyecto(
+        self, proyecto_id: int, usuario_id: int
+    ) -> InfoProyectoPdf | None:
+        # Join Proyecto y Usuario
+        result = await self._session.execute(
+            select(Proyecto.nombre, Proyecto.direccion, Usuario.nombre.label("usuario_nombre"))
+            .join(Usuario, Usuario.id == Proyecto.usuario_id)
+            .where(
+                Proyecto.id == proyecto_id,
+                Proyecto.usuario_id == usuario_id
+            )
+        )
+        row = result.first()
+        if not row:
+            return None
+        return InfoProyectoPdf(
+            proyecto_id=proyecto_id,
+            nombre_proyecto=row.nombre,
+            direccion=row.direccion,
+            nombre_usuario=row.usuario_nombre,
         )

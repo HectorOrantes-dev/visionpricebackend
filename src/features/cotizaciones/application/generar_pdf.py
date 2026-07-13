@@ -13,3 +13,18 @@ class GenerarPdf:
         if cotizacion is None:
             raise NotFound("Cotización no encontrada.")
         return self._renderer.render(cotizacion)
+
+class GenerarPdfProyecto:
+    def __init__(self, repo: CotizacionRepository, renderer: PdfRenderer) -> None:
+        self._repo = repo
+        self._renderer = renderer
+
+    async def execute(self, proyecto_id: int, usuario_id: int) -> bytes:
+        info_proyecto = await self._repo.obtener_info_proyecto(proyecto_id, usuario_id)
+        if not info_proyecto:
+            raise NotFound("Proyecto no encontrado.")
+
+        cotizaciones = await self._repo.listar_cotizaciones_de_proyecto(proyecto_id, usuario_id)
+        if not cotizaciones:
+            raise NotFound("No hay cotizaciones para este proyecto.")
+        return self._renderer.render_proyecto(cotizaciones, proyecto_id, info_proyecto)

@@ -213,6 +213,8 @@ class DetallePresupuesto(Base):
     # Referencias LÓGICAS al microservicio de Proveedores (sin FK física).
     material_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     proveedor_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    proveedor_nombre: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    proveedor_distancia: Mapped[float | None] = mapped_column(Numeric(9, 2), nullable=True)
     descripcion_actividad: Mapped[str] = mapped_column(String(255), nullable=False)
     cantidad: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     unidad_medida: Mapped[str] = mapped_column(String(20), nullable=False)

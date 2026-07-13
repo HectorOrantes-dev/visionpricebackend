@@ -81,6 +81,8 @@ class CrearCotizacion:
                 LineaCotizacion(
                     material_id=prod.producto_id,
                     proveedor_id=prod.proveedor_id,
+                    proveedor_nombre=prod.proveedor_nombre,
+                    proveedor_distancia=prod.distancia_km,
                     descripcion=f"{prod.nombre} ({etiqueta}) — {calc.detalle}",
                     cantidad=calc.cantidad,
                     unidad=calc.unidad,

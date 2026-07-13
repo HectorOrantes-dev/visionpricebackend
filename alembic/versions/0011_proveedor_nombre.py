@@ -23,10 +23,14 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     with op.batch_alter_table("detalle_presupuesto") as batch:
         batch.add_column(
-            sa.Column("proveedor_nombre", sa.String(150), nullable=True)
+            sa.Column("proveedor_nombre", sa.String(255), nullable=True)
+        )
+        batch.add_column(
+            sa.Column("proveedor_distancia", sa.Numeric(9, 2), nullable=True)
         )
 
 
 def downgrade() -> None:
     with op.batch_alter_table("detalle_presupuesto") as batch:
         batch.drop_column("proveedor_nombre")
+        batch.drop_column("proveedor_distancia")

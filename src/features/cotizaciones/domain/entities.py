@@ -45,6 +45,8 @@ class ProductoCercano:
 class LineaCotizacion:
     material_id: str | None
     proveedor_id: str | None
+    proveedor_nombre: str | None
+    proveedor_distancia: float | None
     descripcion: str
     cantidad: float
     unidad: str
@@ -64,3 +66,11 @@ class Cotizacion:
     total: float
     fecha: datetime
     lineas: list[LineaCotizacion]
+
+
+@dataclass
+class InfoProyectoPdf:
+    proyecto_id: int
+    nombre_proyecto: str
+    direccion: str | None
+    nombre_usuario: str

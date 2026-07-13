@@ -7,7 +7,7 @@ from src.core.database import get_session
 from src.features.cotizaciones.application.calcular_areas import CalcularAreas
 from src.features.cotizaciones.application.crear_cotizacion import CrearCotizacion
 from src.features.cotizaciones.application.crear_kit import CrearCotizacionKit
-from src.features.cotizaciones.application.generar_pdf import GenerarPdf
+from src.features.cotizaciones.application.generar_pdf import GenerarPdf, GenerarPdfProyecto
 from src.features.cotizaciones.application.listar_productos import (
     ListarProductosCercanos,
 )
@@ -54,6 +54,15 @@ def get_generar_pdf(
     session: AsyncSession = Depends(get_session),
 ) -> GenerarPdf:
     return GenerarPdf(
+        repo=SqlAlchemyCotizacionRepository(session),
+        renderer=ReportLabPdfRenderer(),
+    )
+
+
+def get_generar_pdf_proyecto(
+    session: AsyncSession = Depends(get_session),
+) -> GenerarPdfProyecto:
+    return GenerarPdfProyecto(
         repo=SqlAlchemyCotizacionRepository(session),
         renderer=ReportLabPdfRenderer(),
     )

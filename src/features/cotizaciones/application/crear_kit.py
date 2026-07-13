@@ -171,6 +171,8 @@ class CrearCotizacionKit:
         return LineaCotizacion(
             material_id=prod.producto_id,
             proveedor_id=prod.proveedor_id,
+            proveedor_nombre=prod.proveedor_nombre,
+            proveedor_distancia=prod.distancia_km,
             descripcion=f"{prod.nombre} ({etiqueta} · {rol}) — {detalle}",
             cantidad=cantidad,
             unidad=prod.unidad,

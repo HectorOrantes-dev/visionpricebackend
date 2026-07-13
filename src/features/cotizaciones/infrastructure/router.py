@@ -19,7 +19,7 @@ from src.features.cotizaciones.application.crear_kit import (
     CrearKitCommand,
     SuperficieKit,
 )
-from src.features.cotizaciones.application.generar_pdf import GenerarPdf
+from src.features.cotizaciones.application.generar_pdf import GenerarPdf, GenerarPdfProyecto
 from src.features.cotizaciones.application.listar_productos import (
     ListarProductosCercanos,
     ProductosCercanosQuery,
@@ -29,6 +29,7 @@ from src.features.cotizaciones.infrastructure.dependencies import (
     get_crear_cotizacion,
     get_crear_kit,
     get_generar_pdf,
+    get_generar_pdf_proyecto,
     get_listar_productos,
 )
 from src.features.cotizaciones.domain.reglas_material import todas as reglas_todas
@@ -212,5 +213,24 @@ async def pdf(
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'attachment; filename="cotizacion_{cotizacion_id}.pdf"'
+        },
+    )
+
+
+@router.get(
+    "/proyecto/{proyecto_id}/pdf",
+    summary="Descargar el PDF con todas las cotizaciones de un proyecto",
+)
+async def pdf_proyecto(
+    proyecto_id: int,
+    user: CurrentUser = Depends(get_current_user),
+    use_case: GenerarPdfProyecto = Depends(get_generar_pdf_proyecto),
+) -> StreamingResponse:
+    contenido = await use_case.execute(proyecto_id, user.id)
+    return StreamingResponse(
+        BytesIO(contenido),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="proyecto_{proyecto_id}_cotizaciones.pdf"'
         },
     )
