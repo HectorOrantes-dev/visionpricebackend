@@ -31,3 +31,9 @@ service-account*.json
 # --- Sistema ---
 .DS_Store
 Thumbs.db
+
+# --- graphify (local, no compartir) ---
+.claude/
+graphify-out/
+CLAUDE.md
+.graphifyignore
