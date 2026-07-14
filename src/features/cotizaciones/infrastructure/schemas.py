@@ -59,6 +59,9 @@ class CrearCotizacionRequest(BaseModel):
     piso_m2: float | None = Field(default=None, ge=0)
     paredes_m2: float | None = Field(default=None, ge=0)
     items: list[ItemRequest] = Field(min_length=1)
+    # Monto fijo que el usuario cobra por instalación/servicio. Se agrega como
+    # una línea más de la cotización (no depende de proveedores) y se suma al total.
+    mano_obra: float | None = Field(default=None, gt=0)
 
 
 class MaterialReglaOut(BaseModel):
@@ -83,6 +86,7 @@ class SuperficieKitRequest(BaseModel):
 class CrearKitRequest(BaseModel):
     proyecto_id: int
     superficies: list[SuperficieKitRequest] = Field(min_length=1)
+    mano_obra: float | None = Field(default=None, gt=0)
 
 
 class LineaOut(BaseModel):
@@ -103,4 +107,5 @@ class CotizacionOut(BaseModel):
     estado: str
     total: float
     fecha: datetime
+    mano_obra: float | None = None
     lineas: list[LineaOut]

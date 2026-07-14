@@ -39,6 +39,9 @@ class CrearCotizacionCommand:
     piso_m2: float | None
     paredes_m2: float | None
     items: list[ItemSeleccionado]
+    # Monto que el usuario cobra por mano de obra/instalación (no viene de
+    # Proveedores). Se agrega como una línea más y entra al total.
+    mano_obra: float | None = None
 
 
 class CrearCotizacion:
@@ -90,6 +93,21 @@ class CrearCotizacion:
                     subtotal=subtotal,
                     piezas=calc.piezas,
                     area_m2=area,
+                )
+            )
+
+        if cmd.mano_obra:
+            lineas.append(
+                LineaCotizacion(
+                    material_id=None,
+                    proveedor_id=None,
+                    proveedor_nombre="Mano de obra",
+                    proveedor_distancia=None,
+                    descripcion="Mano de obra",
+                    cantidad=1,
+                    unidad="servicio",
+                    precio_unitario=cmd.mano_obra,
+                    subtotal=round(cmd.mano_obra, 2),
                 )
             )
 

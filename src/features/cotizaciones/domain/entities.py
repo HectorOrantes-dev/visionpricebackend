@@ -67,6 +67,15 @@ class Cotizacion:
     fecha: datetime
     lineas: list[LineaCotizacion]
 
+    @property
+    def mano_obra(self) -> float | None:
+        # La línea de mano de obra no viene de Proveedores, por eso no tiene
+        # material_id (ver CrearCotizacion/CrearCotizacionKit).
+        for linea in self.lineas:
+            if linea.material_id is None:
+                return linea.subtotal
+        return None
+
 
 @dataclass
 class InfoProyectoPdf:

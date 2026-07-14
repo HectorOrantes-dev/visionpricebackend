@@ -38,6 +38,7 @@ class CrearKitCommand:
     proyecto_id: int
     usuario_id: int
     superficies: list[SuperficieKit]
+    mano_obra: float | None = None
 
 
 class CrearCotizacionKit:
@@ -147,6 +148,21 @@ class CrearCotizacionKit:
                         f"{unid} {boq.unidad}(s) para {s.area_m2:g} m²", None,
                     )
                 )
+
+        if cmd.mano_obra:
+            lineas.append(
+                LineaCotizacion(
+                    material_id=None,
+                    proveedor_id=None,
+                    proveedor_nombre="Mano de obra",
+                    proveedor_distancia=None,
+                    descripcion="Mano de obra",
+                    cantidad=1,
+                    unidad="servicio",
+                    precio_unitario=cmd.mano_obra,
+                    subtotal=round(cmd.mano_obra, 2),
+                )
+            )
 
         total = round(sum(ln.subtotal for ln in lineas), 2)
         return await self._repo.crear(

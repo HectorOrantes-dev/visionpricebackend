@@ -129,6 +129,7 @@ async def crear(
                 )
                 for i in body.items
             ],
+            mano_obra=body.mano_obra,
         )
     )
     await auditor.registrar(
@@ -145,6 +146,7 @@ async def crear(
         estado=cot.estado,
         total=cot.total,
         fecha=cot.fecha,
+        mano_obra=cot.mano_obra,
         lineas=[ln.__dict__ for ln in cot.lineas],
     )
 
@@ -178,6 +180,7 @@ async def crear_kit(
                 )
                 for s in body.superficies
             ],
+            mano_obra=body.mano_obra,
         )
     )
     await auditor.registrar(
@@ -194,6 +197,7 @@ async def crear_kit(
         estado=cot.estado,
         total=cot.total,
         fecha=cot.fecha,
+        mano_obra=cot.mano_obra,
         lineas=[ln.__dict__ for ln in cot.lineas],
     )
 
