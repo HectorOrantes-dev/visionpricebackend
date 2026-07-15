@@ -15,6 +15,10 @@ class CalculoRequest(BaseModel):
     largo_m: float | None = Field(default=None, gt=0)
     ancho_m: float | None = Field(default=None, gt=0)
     alto_m: float | None = Field(default=None, gt=0)
+    # Override de área final: para medir una sola superficie (ej. "una pared
+    # de 2x2 m") sin pasar por la fórmula de perímetro de cuarto completo.
+    piso_m2: float | None = Field(default=None, gt=0)
+    paredes_m2: float | None = Field(default=None, gt=0)
 
 
 class CalculoOut(BaseModel):

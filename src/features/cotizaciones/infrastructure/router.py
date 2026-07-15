@@ -78,6 +78,8 @@ async def calcular(
             largo_m=body.largo_m,
             ancho_m=body.ancho_m,
             alto_m=body.alto_m,
+            piso_m2=body.piso_m2,
+            paredes_m2=body.paredes_m2,
         )
     )
     return CalculoOut(**areas.__dict__)
