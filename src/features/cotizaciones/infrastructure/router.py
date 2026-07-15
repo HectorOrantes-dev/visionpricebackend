@@ -72,7 +72,13 @@ async def calcular(
     use_case: CalcularAreas = Depends(get_calcular_areas),
 ) -> CalculoOut:
     areas = await use_case.execute(
-        CalcularAreasCommand(grabacion_id=body.grabacion_id, texto=body.texto)
+        CalcularAreasCommand(
+            grabacion_id=body.grabacion_id,
+            texto=body.texto,
+            largo_m=body.largo_m,
+            ancho_m=body.ancho_m,
+            alto_m=body.alto_m,
+        )
     )
     return CalculoOut(**areas.__dict__)
 

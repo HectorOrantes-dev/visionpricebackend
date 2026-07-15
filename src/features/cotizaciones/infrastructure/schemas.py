@@ -9,6 +9,12 @@ from pydantic import BaseModel, Field, model_validator
 class CalculoRequest(BaseModel):
     grabacion_id: int | None = None
     texto: str | None = None
+    # Overrides manuales: se combinan con lo que el regex detectó del texto/
+    # transcripción (ej. la altura no se detectó y el usuario la escribe a
+    # mano). Solo se reemplaza la dimensión que venga en el override.
+    largo_m: float | None = Field(default=None, gt=0)
+    ancho_m: float | None = Field(default=None, gt=0)
+    alto_m: float | None = Field(default=None, gt=0)
 
 
 class CalculoOut(BaseModel):
