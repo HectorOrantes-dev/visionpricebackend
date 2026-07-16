@@ -8,6 +8,7 @@ from src.features.cotizaciones.application.calcular_areas import CalcularAreas
 from src.features.cotizaciones.application.crear_cotizacion import CrearCotizacion
 from src.features.cotizaciones.application.crear_kit import CrearCotizacionKit
 from src.features.cotizaciones.application.generar_pdf import GenerarPdf, GenerarPdfProyecto
+from src.features.cotizaciones.application.listar_pdfs import ListarMisPdfs
 from src.features.cotizaciones.application.listar_productos import (
     ListarProductosCercanos,
 )
@@ -57,6 +58,12 @@ def get_generar_pdf(
         repo=SqlAlchemyCotizacionRepository(session),
         renderer=ReportLabPdfRenderer(),
     )
+
+
+def get_listar_pdfs(
+    session: AsyncSession = Depends(get_session),
+) -> ListarMisPdfs:
+    return ListarMisPdfs(repo=SqlAlchemyCotizacionRepository(session))
 
 
 def get_generar_pdf_proyecto(

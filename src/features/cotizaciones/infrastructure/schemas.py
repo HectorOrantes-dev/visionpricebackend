@@ -111,6 +111,16 @@ class LineaOut(BaseModel):
     area_m2: float | None = None
 
 
+class CotizacionPdfOut(BaseModel):
+    id: int
+    proyecto_id: int
+    proyecto_nombre: str
+    estado: str
+    total: float
+    fecha: datetime
+    url_pdf: str
+
+
 class CotizacionOut(BaseModel):
     id: int
     proyecto_id: int

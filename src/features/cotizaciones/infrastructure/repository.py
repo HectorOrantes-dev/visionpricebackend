@@ -5,7 +5,12 @@ Persiste sobre las tablas presupuestos + detalle_presupuesto del esquema.
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.features.cotizaciones.domain.entities import Cotizacion, LineaCotizacion, InfoProyectoPdf
+from src.features.cotizaciones.domain.entities import (
+    Cotizacion,
+    CotizacionPdfItem,
+    LineaCotizacion,
+    InfoProyectoPdf,
+)
 from src.features.cotizaciones.domain.ports import CotizacionRepository
 from src.shared.models import DetallePresupuesto, Presupuesto, Transcripcion, Proyecto, Usuario
 
@@ -155,6 +160,35 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
                 )
             )
         return cotizaciones
+
+    async def listar_pdfs_de_usuario(self, usuario_id: int) -> list[CotizacionPdfItem]:
+        result = await self._session.execute(
+            select(
+                Presupuesto.id,
+                Presupuesto.proyecto_id,
+                Proyecto.nombre.label("proyecto_nombre"),
+                Presupuesto.estado,
+                Presupuesto.total_estimado,
+                Presupuesto.fecha_generacion,
+            )
+            .join(Proyecto, Proyecto.id == Presupuesto.proyecto_id)
+            .where(
+                Presupuesto.usuario_id == usuario_id,
+                Presupuesto.estado.in_(["borrador", "confirmado"]),
+            )
+            .order_by(Presupuesto.fecha_generacion.desc())
+        )
+        return [
+            CotizacionPdfItem(
+                id=row.id,
+                proyecto_id=row.proyecto_id,
+                proyecto_nombre=row.proyecto_nombre,
+                estado=row.estado,
+                total=float(row.total_estimado or 0),
+                fecha=row.fecha_generacion,
+            )
+            for row in result.all()
+        ]
 
     async def obtener_info_proyecto(
         self, proyecto_id: int, usuario_id: int

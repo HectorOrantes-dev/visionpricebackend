@@ -20,6 +20,7 @@ from src.features.cotizaciones.application.crear_kit import (
     SuperficieKit,
 )
 from src.features.cotizaciones.application.generar_pdf import GenerarPdf, GenerarPdfProyecto
+from src.features.cotizaciones.application.listar_pdfs import ListarMisPdfs
 from src.features.cotizaciones.application.listar_productos import (
     ListarProductosCercanos,
     ProductosCercanosQuery,
@@ -30,6 +31,7 @@ from src.features.cotizaciones.infrastructure.dependencies import (
     get_crear_kit,
     get_generar_pdf,
     get_generar_pdf_proyecto,
+    get_listar_pdfs,
     get_listar_productos,
 )
 from src.features.cotizaciones.domain.reglas_material import todas as reglas_todas
@@ -37,6 +39,7 @@ from src.features.cotizaciones.infrastructure.schemas import (
     CalculoOut,
     CalculoRequest,
     CotizacionOut,
+    CotizacionPdfOut,
     CrearCotizacionRequest,
     CrearKitRequest,
     MaterialReglaOut,
@@ -208,6 +211,31 @@ async def crear_kit(
         mano_obra=cot.mano_obra,
         lineas=[ln.__dict__ for ln in cot.lineas],
     )
+
+
+@router.get(
+    "/pdfs",
+    response_model=list[CotizacionPdfOut],
+    summary="Listar todos los PDFs (cotizaciones) creadas por el usuario, en todas sus obras",
+)
+async def mis_pdfs(
+    request: Request,
+    user: CurrentUser = Depends(get_current_user),
+    use_case: ListarMisPdfs = Depends(get_listar_pdfs),
+) -> list[CotizacionPdfOut]:
+    items = await use_case.execute(user.id)
+    return [
+        CotizacionPdfOut(
+            id=it.id,
+            proyecto_id=it.proyecto_id,
+            proyecto_nombre=it.proyecto_nombre,
+            estado=it.estado,
+            total=it.total,
+            fecha=it.fecha,
+            url_pdf=str(request.url_for("pdf", cotizacion_id=it.id)),
+        )
+        for it in items
+    ]
 
 
 @router.get(

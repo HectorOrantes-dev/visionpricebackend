@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 from src.features.cotizaciones.domain.entities import (
     Cotizacion,
+    CotizacionPdfItem,
     LineaCotizacion,
     ProductoCercano,
     InfoProyectoPdf,
@@ -61,6 +62,13 @@ class CotizacionRepository(ABC):
         self, proyecto_id: int, usuario_id: int
     ) -> InfoProyectoPdf | None:
         ...
+
+    @abstractmethod
+    async def listar_pdfs_de_usuario(
+        self, usuario_id: int
+    ) -> list[CotizacionPdfItem]:
+        """Todas las cotizaciones (de todas las obras) creadas por el usuario,
+        sin importar su rol — cada una descargable como PDF."""
 
 
 class PdfRenderer(ABC):
