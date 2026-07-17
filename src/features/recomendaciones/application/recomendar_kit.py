@@ -69,7 +69,7 @@ class RecomendarKit(RecomendarKitPort):
             return RecomendacionKit(
                 tipo_kit=tipo_kit,
                 confianza_tipo_kit=confianza,
-                complementos_recomendados=["pegazulejo", "cruceta", "emboquillador"],
+                complementos_recomendados=["pegazulejo", "cruceta", "emboquillado"],
                 metodo_crucetas_recomendado="tradicional",
                 zona_referencia=None,
                 n_obras_similares=0,

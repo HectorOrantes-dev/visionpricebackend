@@ -25,7 +25,7 @@ from src.features.recomendaciones.domain.entities import Obra
 from src.features.recomendaciones.domain.ports import ObrasDataset
 from src.shared.models import DetallePresupuesto, Presupuesto, Proyecto
 
-_COMPLEMENTO_CATEGORIAS = {"pegazulejo", "cruceta", "emboquillador"}
+_COMPLEMENTO_CATEGORIAS = {"pegazulejo", "cruceta", "emboquillado"}
 _RE_AREA = re.compile(r"para\s+([\d]+(?:[.,]\d+)?)\s*m")
 
 
