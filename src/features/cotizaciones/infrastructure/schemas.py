@@ -97,6 +97,10 @@ class CrearKitRequest(BaseModel):
     proyecto_id: int
     superficies: list[SuperficieKitRequest] = Field(min_length=1)
     mano_obra: float | None = Field(default=None, gt=0)
+    # Si esta cotización se creó a partir de una sugerencia de
+    # POST /recomendaciones/kit, mandar su recomendacion_id acá marca esa
+    # recomendación como "usada" (contador de recomendaciones/metricas).
+    recomendacion_id: int | None = None
 
 
 class LineaOut(BaseModel):

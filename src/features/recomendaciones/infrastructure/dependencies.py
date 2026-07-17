@@ -22,9 +22,18 @@ from src.features.recomendaciones.infrastructure.dataset_sintetico import (
     ObrasDatasetSintetico,
 )
 from src.features.recomendaciones.infrastructure.modelos import ArbolTipoKit, KnnZona
+from src.features.recomendaciones.infrastructure.repository import (
+    SqlAlchemyRecomendacionUsoRepository,
+)
 
 _arbol = ArbolTipoKit()
 _knn = KnnZona()
+
+
+def get_recomendacion_uso_repository(
+    session: AsyncSession = Depends(get_session),
+) -> SqlAlchemyRecomendacionUsoRepository:
+    return SqlAlchemyRecomendacionUsoRepository(session)
 
 
 def get_dataset(
@@ -42,5 +51,9 @@ def get_entrenar_modelos(
     return EntrenarModelos(dataset=dataset, arbol=_arbol, knn=_knn)
 
 
-def get_recomendar_kit() -> RecomendarKit:
-    return RecomendarKit(arbol=_arbol, knn=_knn)
+def get_recomendar_kit(
+    auditoria: SqlAlchemyRecomendacionUsoRepository = Depends(
+        get_recomendacion_uso_repository
+    ),
+) -> RecomendarKit:
+    return RecomendarKit(arbol=_arbol, knn=_knn, auditoria=auditoria)

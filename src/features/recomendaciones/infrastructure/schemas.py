@@ -15,12 +15,22 @@ class RecomendarKitRequest(BaseModel):
     categoria: str
     area_m2: float = Field(gt=0)
     k: int = Field(default=15, ge=3, le=50)
+    # Si se manda, esta recomendación queda ligada a la obra — permite medir
+    # después si se concretó en una cotización de ese mismo proyecto.
+    proyecto_id: int | None = None
 
 
 class RecomendacionKitOut(BaseModel):
+    recomendacion_id: int | None
     tipo_kit: str
     confianza_tipo_kit: float
     complementos_recomendados: list[str]
     metodo_crucetas_recomendado: str | None
     zona_referencia: str | None
     n_obras_similares: int
+
+
+class RecomendacionesMetricasOut(BaseModel):
+    total_solicitudes: int
+    total_usadas: int
+    tasa_uso: float

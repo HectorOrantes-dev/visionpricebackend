@@ -48,5 +48,30 @@ class RecomendadorZona(ABC):
 
 class RecomendarKitPort(ABC):
     @abstractmethod
-    async def recomendar(self, obra: ObraNueva, k: int) -> RecomendacionKit:
+    async def recomendar(
+        self, obra: ObraNueva, k: int, *, usuario_id: int
+    ) -> RecomendacionKit:
         ...
+
+
+class RecomendacionUsoRepository(ABC):
+    """Auditoría: qué se recomendó y si se terminó usando en una cotización."""
+
+    @abstractmethod
+    async def registrar_solicitud(
+        self,
+        *,
+        usuario_id: int,
+        proyecto_id: int | None,
+        recomendacion: RecomendacionKit,
+        categoria: str,
+    ) -> int:
+        """Persiste la recomendación devuelta al cliente y devuelve su id."""
+
+    @abstractmethod
+    async def marcar_usada(self, recomendacion_id: int, cotizacion_id: int) -> bool:
+        """True si existía y se marcó; False si el id no existe."""
+
+    @abstractmethod
+    async def contar_uso(self) -> tuple[int, int]:
+        """(total_solicitudes, total_usadas)."""

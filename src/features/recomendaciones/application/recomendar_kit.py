@@ -10,6 +10,7 @@ from collections import Counter
 from src.features.recomendaciones.domain.entities import ObraNueva, RecomendacionKit
 from src.features.recomendaciones.domain.ports import (
     ClasificadorTipoKit,
+    RecomendacionUsoRepository,
     RecomendadorZona,
     RecomendarKitPort,
 )
@@ -25,14 +26,30 @@ class RecomendarKit(RecomendarKitPort):
         self,
         arbol: ClasificadorTipoKit,
         knn: RecomendadorZona,
+        auditoria: RecomendacionUsoRepository,
     ) -> None:
         self._arbol = arbol
         self._knn = knn
+        self._auditoria = auditoria
 
-    async def recomendar(self, obra: ObraNueva, k: int = 15) -> RecomendacionKit:
+    async def recomendar(
+        self, obra: ObraNueva, k: int = 15, *, usuario_id: int
+    ) -> RecomendacionKit:
         if obra.area_m2 <= 0:
             raise ValidationError("area_m2 debe ser mayor a 0.")
 
+        resultado = self._construir_recomendacion(obra, k)
+
+        recomendacion_id = await self._auditoria.registrar_solicitud(
+            usuario_id=usuario_id,
+            proyecto_id=obra.proyecto_id,
+            recomendacion=resultado,
+            categoria=obra.categoria,
+        )
+        resultado.recomendacion_id = recomendacion_id
+        return resultado
+
+    def _construir_recomendacion(self, obra: ObraNueva, k: int) -> RecomendacionKit:
         tipo_kit, confianza = self._arbol.predecir(obra.categoria, obra.area_m2)
 
         if tipo_kit != "kit":

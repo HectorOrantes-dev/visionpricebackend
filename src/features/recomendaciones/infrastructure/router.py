@@ -6,10 +6,15 @@ from src.features.recomendaciones.application.recomendar_kit import RecomendarKi
 from src.features.recomendaciones.domain.entities import ObraNueva
 from src.features.recomendaciones.infrastructure.dependencies import (
     get_entrenar_modelos,
+    get_recomendacion_uso_repository,
     get_recomendar_kit,
+)
+from src.features.recomendaciones.infrastructure.repository import (
+    SqlAlchemyRecomendacionUsoRepository,
 )
 from src.features.recomendaciones.infrastructure.schemas import (
     EntrenarOut,
+    RecomendacionesMetricasOut,
     RecomendacionKitOut,
     RecomendarKitRequest,
 )
@@ -43,7 +48,7 @@ async def entrenar(
 )
 async def recomendar(
     body: RecomendarKitRequest,
-    _: CurrentUser = Depends(cualquier_rol),
+    user: CurrentUser = Depends(cualquier_rol),
     use_case: RecomendarKit = Depends(get_recomendar_kit),
 ) -> RecomendacionKitOut:
     recomendacion = await use_case.recomendar(
@@ -52,7 +57,28 @@ async def recomendar(
             lng=body.lng,
             categoria=body.categoria,
             area_m2=body.area_m2,
+            proyecto_id=body.proyecto_id,
         ),
         k=body.k,
+        usuario_id=user.id,
     )
     return RecomendacionKitOut(**recomendacion.__dict__)
+
+
+@router.get(
+    "/metricas",
+    response_model=RecomendacionesMetricasOut,
+    summary="Contador de uso: cuántas recomendaciones se pidieron vs. cuántas se concretaron en una cotización",
+)
+async def metricas(
+    _: CurrentUser = Depends(solo_ingeniero),
+    repo: SqlAlchemyRecomendacionUsoRepository = Depends(
+        get_recomendacion_uso_repository
+    ),
+) -> RecomendacionesMetricasOut:
+    total, usadas = await repo.contar_uso()
+    return RecomendacionesMetricasOut(
+        total_solicitudes=total,
+        total_usadas=usadas,
+        tasa_uso=round(usadas / total, 4) if total else 0.0,
+    )

@@ -35,6 +35,12 @@ from src.features.cotizaciones.infrastructure.dependencies import (
     get_listar_productos,
 )
 from src.features.cotizaciones.domain.reglas_material import todas as reglas_todas
+from src.features.recomendaciones.infrastructure.dependencies import (
+    get_recomendacion_uso_repository,
+)
+from src.features.recomendaciones.infrastructure.repository import (
+    SqlAlchemyRecomendacionUsoRepository,
+)
 from src.features.cotizaciones.infrastructure.schemas import (
     CalculoOut,
     CalculoRequest,
@@ -174,6 +180,9 @@ async def crear_kit(
     user: CurrentUser = Depends(get_current_user),
     use_case: CrearCotizacionKit = Depends(get_crear_kit),
     auditor: Auditor = Depends(get_auditor),
+    recomendaciones_repo: SqlAlchemyRecomendacionUsoRepository = Depends(
+        get_recomendacion_uso_repository
+    ),
 ) -> CotizacionOut:
     cot = await use_case.execute(
         CrearKitCommand(
@@ -202,6 +211,10 @@ async def crear_kit(
         detalles={"total": cot.total, "proyecto_id": cot.proyecto_id},
         ip_origen=get_client_ip(request),
     )
+    if body.recomendacion_id is not None:
+        # No crítico: si el id no existe o ya se usó, no se rompe la
+        # creación de la cotización — solo se pierde ese dato de auditoría.
+        await recomendaciones_repo.marcar_usada(body.recomendacion_id, cot.id)
     return CotizacionOut(
         id=cot.id,
         proyecto_id=cot.proyecto_id,

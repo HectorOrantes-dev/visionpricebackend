@@ -37,6 +37,9 @@ class ObraNueva:
     lng: float
     categoria: str
     area_m2: float
+    # Si se manda, la recomendación queda ligada a esta obra — permite luego
+    # cruzarla con la cotización que efectivamente se cree ahí.
+    proyecto_id: int | None = None
 
 
 @dataclass
@@ -47,3 +50,6 @@ class RecomendacionKit:
     metodo_crucetas_recomendado: MetodoCrucetas | None
     zona_referencia: str | None
     n_obras_similares: int
+    # Id de la fila persistida en recomendaciones_uso (None si aún no se
+    # guardó — lo setea el caso de uso después de construir el resultado).
+    recomendacion_id: int | None = None
