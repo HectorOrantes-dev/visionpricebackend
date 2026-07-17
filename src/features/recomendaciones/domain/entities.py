@@ -7,7 +7,10 @@ Dos preguntas, dos modelos (ver domain/ports.py):
      usaron en obras similares? → K-NN geográfico.
 """
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from src.features.cotizaciones.domain.entities import ProductoCercano
 
 TipoKit = Literal["kit", "rendimiento"]
 MetodoCrucetas = Literal["interseccion", "tradicional", "nivelacion"]
@@ -53,3 +56,9 @@ class RecomendacionKit:
     # Id de la fila persistida en recomendaciones_uso (None si aún no se
     # guardó — lo setea el caso de uso después de construir el resultado).
     recomendacion_id: int | None = None
+    # Productos REALES y cercanos de Proveedores para cada categoría
+    # involucrada (la principal + cada complemento recomendado), para poder
+    # decirle al usuario qué comprar y no solo qué categoría usar.
+    materiales_recomendados: dict[str, list["ProductoCercano"]] = field(
+        default_factory=dict
+    )

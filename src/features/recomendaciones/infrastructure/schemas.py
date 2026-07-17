@@ -1,6 +1,8 @@
 """Schemas HTTP de la feature recomendaciones."""
 from pydantic import BaseModel, Field
 
+from src.features.cotizaciones.infrastructure.schemas import ProductoCercanoOut
+
 
 class EntrenarOut(BaseModel):
     n_obras: int
@@ -28,6 +30,11 @@ class RecomendacionKitOut(BaseModel):
     metodo_crucetas_recomendado: str | None
     zona_referencia: str | None
     n_obras_similares: int
+    # Productos reales y cercanos por categoría (principal + complementos):
+    # {"azulejo": [...], "pegazulejo": [...], "cruceta": [...], "emboquillado": [...]}
+    materiales_recomendados: dict[str, list[ProductoCercanoOut]] = Field(
+        default_factory=dict
+    )
 
 
 class RecomendacionesMetricasOut(BaseModel):

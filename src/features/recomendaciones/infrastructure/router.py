@@ -12,6 +12,7 @@ from src.features.recomendaciones.infrastructure.dependencies import (
 from src.features.recomendaciones.infrastructure.repository import (
     SqlAlchemyRecomendacionUsoRepository,
 )
+from src.features.cotizaciones.infrastructure.schemas import ProductoCercanoOut
 from src.features.recomendaciones.infrastructure.schemas import (
     EntrenarOut,
     RecomendacionesMetricasOut,
@@ -62,7 +63,19 @@ async def recomendar(
         k=body.k,
         usuario_id=user.id,
     )
-    return RecomendacionKitOut(**recomendacion.__dict__)
+    return RecomendacionKitOut(
+        recomendacion_id=recomendacion.recomendacion_id,
+        tipo_kit=recomendacion.tipo_kit,
+        confianza_tipo_kit=recomendacion.confianza_tipo_kit,
+        complementos_recomendados=recomendacion.complementos_recomendados,
+        metodo_crucetas_recomendado=recomendacion.metodo_crucetas_recomendado,
+        zona_referencia=recomendacion.zona_referencia,
+        n_obras_similares=recomendacion.n_obras_similares,
+        materiales_recomendados={
+            categoria: [ProductoCercanoOut(**p.__dict__) for p in productos]
+            for categoria, productos in recomendacion.materiales_recomendados.items()
+        },
+    )
 
 
 @router.get(

@@ -60,7 +60,9 @@ def get_recomendar_kit(
         get_recomendacion_uso_repository
     ),
 ) -> RecomendarKit:
-    return RecomendarKit(arbol=_arbol, knn=_knn, auditoria=auditoria)
+    return RecomendarKit(
+        arbol=_arbol, knn=_knn, auditoria=auditoria, proveedores=ProvidersAdapter()
+    )
 
 
 async def entrenar_si_hace_falta() -> None:
