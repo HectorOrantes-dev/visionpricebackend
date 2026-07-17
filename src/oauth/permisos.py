@@ -29,3 +29,7 @@ class Permisos:
     # Exclusivo del Ingeniero Civil:
     AUDITORIA_PRECIOS = ("ingeniero_civil",)   # detección de anomalías
     ADMIN_RBAC = ("ingeniero_civil",)          # configurar accesos/perfiles
+    ENTRENAR_MODELOS = ("ingeniero_civil",)    # reentrenar ML de recomendaciones
+
+    # Pedir una recomendación de kit: todos (mismo criterio que COTIZAR).
+    RECOMENDACIONES = TODOS
