@@ -4,6 +4,8 @@ App factory: monta routers, CORS, manejadores de error y /health.
 Arquitectura hexagonal: cada feature vive en src/features/<feature>/
 con capas domain / application / infrastructure.
 """
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -28,6 +30,9 @@ from src.features.notificaciones.infrastructure.router import (
 from src.features.pagos.infrastructure.router import router as pagos_router
 from src.features.password.infrastructure.router import router as password_router
 from src.features.proyectos.infrastructure.router import router as proyectos_router
+from src.features.recomendaciones.infrastructure.dependencies import (
+    entrenar_si_hace_falta,
+)
 from src.features.recomendaciones.infrastructure.router import (
     router as recomendaciones_router,
 )
@@ -60,6 +65,20 @@ def create_app() -> FastAPI:
     )
 
     register_error_handlers(app)
+
+    @app.on_event("startup")
+    async def _entrenar_ml_si_hace_falta() -> None:
+        # El filesystem del contenedor es efímero: si nunca se llamó
+        # POST /recomendaciones/entrenar en esta instancia (deploy nuevo,
+        # restart), los .joblib no existen. Entrenar acá evita el 500 en el
+        # primer POST /recomendaciones/kit real. No debe tumbar el boot si
+        # falla (ej. DB no disponible todavía).
+        try:
+            await entrenar_si_hace_falta()
+        except Exception:
+            logging.getLogger("visionprice.ml").exception(
+                "No se pudieron entrenar los modelos de recomendaciones al arrancar."
+            )
 
     @app.get("/health", tags=["health"], response_model=HealthOut)
     async def health() -> HealthOut:

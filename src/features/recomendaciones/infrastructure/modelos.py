@@ -27,6 +27,12 @@ _PATH_ARBOL = _ARTIFACTS_DIR / "arbol_tipo_kit.joblib"
 _PATH_KNN = _ARTIFACTS_DIR / "knn_zona.joblib"
 
 
+def existen_artefactos() -> bool:
+    """False en un contenedor recién levantado que nunca entrenó (filesystem
+    efímero: cada redeploy los pierde) — usado para autoentrenar al boot."""
+    return _PATH_ARBOL.exists() and _PATH_KNN.exists()
+
+
 class ArbolTipoKit(ClasificadorTipoKit):
     """Clasifica una obra como 'kit' o 'rendimiento' según categoría + área.
 

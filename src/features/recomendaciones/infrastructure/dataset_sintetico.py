@@ -35,8 +35,11 @@ _PIEZAS_KIT = {
 
 _METODOS_CRUCETAS = ["interseccion", "tradicional", "nivelacion"]
 # Probabilidad de que cada complemento SÍ se haya usado en una obra de kit
-# (el pegazulejo es casi obligatorio; boquilla a veces se cotiza aparte).
-_PROB_COMPLEMENTO = {"pegazulejo": 0.95, "cruceta": 0.90, "boquilla": 0.72}
+# (el pegazulejo es casi obligatorio; emboquillador a veces se cotiza aparte).
+# Nombres iguales a las categorías reales de Proveedores (dataset_real.py) —
+# si no coinciden, el K-NN cuenta "boquilla" y "emboquillador" como cosas
+# distintas y diluye el voto en vez de sumarlo.
+_PROB_COMPLEMENTO = {"pegazulejo": 0.95, "cruceta": 0.90, "emboquillador": 0.72}
 
 # Distribución de categorías por obra: kits (piso/azulejo/zoclo) vs simples
 # (pintura/impermeabilizante) — la pintura es, por lejos, la más cotizada.

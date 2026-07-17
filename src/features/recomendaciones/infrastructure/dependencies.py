@@ -7,7 +7,7 @@ sentido releerlos de disco en cada request.
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.database import get_session
+from src.core.database import SessionLocal, get_session
 from src.features.cotizaciones.infrastructure.proveedores_adapter import (
     ProvidersAdapter,
 )
@@ -21,7 +21,11 @@ from src.features.recomendaciones.infrastructure.dataset_real import ObrasDatase
 from src.features.recomendaciones.infrastructure.dataset_sintetico import (
     ObrasDatasetSintetico,
 )
-from src.features.recomendaciones.infrastructure.modelos import ArbolTipoKit, KnnZona
+from src.features.recomendaciones.infrastructure.modelos import (
+    ArbolTipoKit,
+    KnnZona,
+    existen_artefactos,
+)
 from src.features.recomendaciones.infrastructure.repository import (
     SqlAlchemyRecomendacionUsoRepository,
 )
@@ -57,3 +61,17 @@ def get_recomendar_kit(
     ),
 ) -> RecomendarKit:
     return RecomendarKit(arbol=_arbol, knn=_knn, auditoria=auditoria)
+
+
+async def entrenar_si_hace_falta() -> None:
+    """Entrena y deja en memoria los modelos si el contenedor arrancó sin
+    artefactos en disco (filesystem efímero: cada redeploy los pierde). Se
+    llama una vez al startup de la app — ver main.py."""
+    if existen_artefactos():
+        return
+    async with SessionLocal() as session:
+        dataset = ObrasDatasetCombinado(
+            real=ObrasDatasetReal(session=session, proveedores=ProvidersAdapter()),
+            sintetico=ObrasDatasetSintetico(),
+        )
+        await EntrenarModelos(dataset=dataset, arbol=_arbol, knn=_knn).execute()
