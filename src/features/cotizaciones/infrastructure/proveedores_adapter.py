@@ -38,6 +38,16 @@ def _to_producto(d: dict) -> ProductoCercano:
     )
 
 
+# Los proveedores todavía no usan estas categorías como algo distinto de la
+# categoría "padre" — todo azulejo/mosaico de pared lo cargan bajo "piso".
+# Mientras el catálogo no lo separe, si la categoría pedida no trae productos
+# se reintenta con su categoría "padre" en vez de devolver vacío. Quitar la
+# entrada de este mapa el día que los proveedores empiecen a etiquetar bien.
+_FALLBACK_CATEGORIA = {
+    "azulejo": "piso",
+}
+
+
 class ProvidersAdapter(ProveedoresPort):
     def __init__(self, gateway: ProvidersGateway | None = None) -> None:
         self._gateway = gateway or ProvidersGateway()
@@ -48,6 +58,12 @@ class ProvidersAdapter(ProveedoresPort):
         data = await self._gateway.productos_cercanos(
             lat=lat, lng=lng, radio_km=radio_km, categoria=categoria
         )
+        if not data and categoria:
+            fallback = _FALLBACK_CATEGORIA.get(categoria.lower().strip())
+            if fallback:
+                data = await self._gateway.productos_cercanos(
+                    lat=lat, lng=lng, radio_km=radio_km, categoria=fallback
+                )
         return [_to_producto(d) for d in data]
 
     async def productos_por_ids(self, ids: list[str]) -> list[ProductoCercano]:

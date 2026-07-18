@@ -4,7 +4,7 @@ Define, para cada categoría que detecta el motor de IA, cómo debe cotizarse:
 
   - "rendimiento" (SIMPLE): un solo producto, cantidad = ceil(área / rendimiento_m2).
       Ej: pintura, impermeabilizante. → usar POST /cotizaciones.
-  - "kit": producto principal (loseta) + complementos (pegazulejo/cruceta/boquilla).
+  - "kit": producto principal (loseta) + complementos (pegazulejo/cruceta/emboquillado).
       Ej: piso, azulejo, zoclo. → usar POST /cotizaciones/kit.
 
 La app consulta GET /cotizaciones/materiales para saber cómo dibujar la UI de
@@ -22,9 +22,9 @@ class ReglaMaterial:
 
 
 _REGLAS: dict[str, ReglaMaterial] = {
-    "piso": ReglaMaterial("piso", "kit", True, ["pegazulejo", "cruceta", "boquilla"]),
-    "azulejo": ReglaMaterial("azulejo", "kit", True, ["pegazulejo", "cruceta", "boquilla"]),
-    "zoclo": ReglaMaterial("zoclo", "kit", True, ["pegazulejo", "cruceta", "boquilla"]),
+    "piso": ReglaMaterial("piso", "kit", True, ["pegazulejo", "cruceta", "emboquillado"]),
+    "azulejo": ReglaMaterial("azulejo", "kit", True, ["pegazulejo", "cruceta", "emboquillado"]),
+    "zoclo": ReglaMaterial("zoclo", "kit", True, ["pegazulejo", "cruceta", "emboquillado"]),
     "pintura": ReglaMaterial("pintura", "rendimiento", False),
     "impermeabilizante": ReglaMaterial("impermeabilizante", "rendimiento", False),
 }

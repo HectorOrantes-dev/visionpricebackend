@@ -259,6 +259,38 @@ class DetallePresupuesto(Base):
     subtotal: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
 
 
+class RecomendacionUso(Base):
+    """Cada llamada a POST /recomendaciones/kit, y si terminó usándose de
+    verdad en una cotización (POST /cotizaciones/kit con recomendacion_id).
+    El contador de "recomendaciones usadas" sale de contar `cotizacion_id IS
+    NOT NULL` acá — no es un número en memoria, es auditable.
+    """
+
+    __tablename__ = "recomendaciones_uso"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("usuarios.id"), nullable=False
+    )
+    proyecto_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("proyectos.id"), nullable=True
+    )
+    categoria: Mapped[str] = mapped_column(String(100), nullable=False)
+    tipo_kit_recomendado: Mapped[str] = mapped_column(String(30), nullable=False)
+    complementos_recomendados: Mapped[dict] = mapped_column(JSONType, nullable=False)
+    metodo_crucetas_recomendado: Mapped[str | None] = mapped_column(
+        String(30), nullable=True
+    )
+    fecha_solicitud: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+    # Se completan solo si la recomendación se concretó en una cotización.
+    cotizacion_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("presupuestos.id"), nullable=True
+    )
+    fecha_uso: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
 class DocumentoPDF(Base):
     __tablename__ = "documentos_pdf"
 

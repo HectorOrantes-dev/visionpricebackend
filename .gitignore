@@ -32,6 +32,9 @@ service-account*.json
 .DS_Store
 Thumbs.db
 
+# --- ML: artefactos entrenados (se regeneran con POST /recomendaciones/entrenar) ---
+src/features/recomendaciones/artifacts/*.joblib
+
 # --- graphify (local, no compartir) ---
 .claude/
 graphify-out/

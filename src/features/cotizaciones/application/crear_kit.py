@@ -94,13 +94,15 @@ class CrearCotizacionKit:
                     merma=self._merma,
                 )
 
-            # Cajas: por rendimiento (m²/caja) o, si no hay, por piezas.
+            # Cajas: por rendimiento (m²/caja) o, si no hay, agrupando las
+            # piezas en cajas de piezas_por_paquete (nunca piezas sueltas:
+            # el precio_unitario es por caja, no por pieza).
             if tile.rendimiento_m2:
                 cant = unidades_por_rendimiento(
                     s.area_m2, tile.rendimiento_m2, merma=self._merma
                 )
             elif piezas is not None:
-                cant = piezas
+                cant = paquetes(piezas, tile.piezas_por_paquete)
             else:
                 cant = math.ceil(s.area_m2 * (1 + self._merma))
             det = (

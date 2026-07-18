@@ -20,6 +20,7 @@ from src.features.cotizaciones.application.crear_kit import (
     SuperficieKit,
 )
 from src.features.cotizaciones.application.generar_pdf import GenerarPdf, GenerarPdfProyecto
+from src.features.cotizaciones.application.listar_pdfs import ListarMisPdfs
 from src.features.cotizaciones.application.listar_productos import (
     ListarProductosCercanos,
     ProductosCercanosQuery,
@@ -30,13 +31,21 @@ from src.features.cotizaciones.infrastructure.dependencies import (
     get_crear_kit,
     get_generar_pdf,
     get_generar_pdf_proyecto,
+    get_listar_pdfs,
     get_listar_productos,
 )
 from src.features.cotizaciones.domain.reglas_material import todas as reglas_todas
+from src.features.recomendaciones.infrastructure.dependencies import (
+    get_recomendacion_uso_repository,
+)
+from src.features.recomendaciones.infrastructure.repository import (
+    SqlAlchemyRecomendacionUsoRepository,
+)
 from src.features.cotizaciones.infrastructure.schemas import (
     CalculoOut,
     CalculoRequest,
     CotizacionOut,
+    CotizacionPdfOut,
     CrearCotizacionRequest,
     CrearKitRequest,
     MaterialReglaOut,
@@ -72,7 +81,15 @@ async def calcular(
     use_case: CalcularAreas = Depends(get_calcular_areas),
 ) -> CalculoOut:
     areas = await use_case.execute(
-        CalcularAreasCommand(grabacion_id=body.grabacion_id, texto=body.texto)
+        CalcularAreasCommand(
+            grabacion_id=body.grabacion_id,
+            texto=body.texto,
+            largo_m=body.largo_m,
+            ancho_m=body.ancho_m,
+            alto_m=body.alto_m,
+            piso_m2=body.piso_m2,
+            paredes_m2=body.paredes_m2,
+        )
     )
     return CalculoOut(**areas.__dict__)
 
@@ -163,6 +180,9 @@ async def crear_kit(
     user: CurrentUser = Depends(get_current_user),
     use_case: CrearCotizacionKit = Depends(get_crear_kit),
     auditor: Auditor = Depends(get_auditor),
+    recomendaciones_repo: SqlAlchemyRecomendacionUsoRepository = Depends(
+        get_recomendacion_uso_repository
+    ),
 ) -> CotizacionOut:
     cot = await use_case.execute(
         CrearKitCommand(
@@ -191,6 +211,10 @@ async def crear_kit(
         detalles={"total": cot.total, "proyecto_id": cot.proyecto_id},
         ip_origen=get_client_ip(request),
     )
+    if body.recomendacion_id is not None:
+        # No crítico: si el id no existe o ya se usó, no se rompe la
+        # creación de la cotización — solo se pierde ese dato de auditoría.
+        await recomendaciones_repo.marcar_usada(body.recomendacion_id, cot.id)
     return CotizacionOut(
         id=cot.id,
         proyecto_id=cot.proyecto_id,
@@ -200,6 +224,31 @@ async def crear_kit(
         mano_obra=cot.mano_obra,
         lineas=[ln.__dict__ for ln in cot.lineas],
     )
+
+
+@router.get(
+    "/pdfs",
+    response_model=list[CotizacionPdfOut],
+    summary="Listar todos los PDFs (cotizaciones) creadas por el usuario, en todas sus obras",
+)
+async def mis_pdfs(
+    request: Request,
+    user: CurrentUser = Depends(get_current_user),
+    use_case: ListarMisPdfs = Depends(get_listar_pdfs),
+) -> list[CotizacionPdfOut]:
+    items = await use_case.execute(user.id)
+    return [
+        CotizacionPdfOut(
+            id=it.id,
+            proyecto_id=it.proyecto_id,
+            proyecto_nombre=it.proyecto_nombre,
+            estado=it.estado,
+            total=it.total,
+            fecha=it.fecha,
+            url_pdf=str(request.url_for("pdf", cotizacion_id=it.id)),
+        )
+        for it in items
+    ]
 
 
 @router.get(

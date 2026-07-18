@@ -9,6 +9,16 @@ from pydantic import BaseModel, Field, model_validator
 class CalculoRequest(BaseModel):
     grabacion_id: int | None = None
     texto: str | None = None
+    # Overrides manuales: se combinan con lo que el regex detectó del texto/
+    # transcripción (ej. la altura no se detectó y el usuario la escribe a
+    # mano). Solo se reemplaza la dimensión que venga en el override.
+    largo_m: float | None = Field(default=None, gt=0)
+    ancho_m: float | None = Field(default=None, gt=0)
+    alto_m: float | None = Field(default=None, gt=0)
+    # Override de área final: para medir una sola superficie (ej. "una pared
+    # de 2x2 m") sin pasar por la fórmula de perímetro de cuarto completo.
+    piso_m2: float | None = Field(default=None, gt=0)
+    paredes_m2: float | None = Field(default=None, gt=0)
 
 
 class CalculoOut(BaseModel):
@@ -87,6 +97,10 @@ class CrearKitRequest(BaseModel):
     proyecto_id: int
     superficies: list[SuperficieKitRequest] = Field(min_length=1)
     mano_obra: float | None = Field(default=None, gt=0)
+    # Si esta cotización se creó a partir de una sugerencia de
+    # POST /recomendaciones/kit, mandar su recomendacion_id acá marca esa
+    # recomendación como "usada" (contador de recomendaciones/metricas).
+    recomendacion_id: int | None = None
 
 
 class LineaOut(BaseModel):
@@ -99,6 +113,16 @@ class LineaOut(BaseModel):
     subtotal: float
     piezas: int | None = None
     area_m2: float | None = None
+
+
+class CotizacionPdfOut(BaseModel):
+    id: int
+    proyecto_id: int
+    proyecto_nombre: str
+    estado: str
+    total: float
+    fecha: datetime
+    url_pdf: str
 
 
 class CotizacionOut(BaseModel):

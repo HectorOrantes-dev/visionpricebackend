@@ -78,6 +78,17 @@ class Cotizacion:
 
 
 @dataclass
+class CotizacionPdfItem:
+    """Fila liviana para listar los PDFs generables del usuario (sin líneas)."""
+    id: int
+    proyecto_id: int
+    proyecto_nombre: str
+    estado: str
+    total: float
+    fecha: datetime
+
+
+@dataclass
 class InfoProyectoPdf:
     proyecto_id: int
     nombre_proyecto: str
