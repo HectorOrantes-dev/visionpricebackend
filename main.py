@@ -27,6 +27,7 @@ from src.features.notificaciones.infrastructure.router import (
 )
 from src.features.pagos.infrastructure.router import router as pagos_router
 from src.features.password.infrastructure.router import router as password_router
+from src.features.proyectos.infrastructure.membresia_router import router as membresia_router
 from src.features.proyectos.infrastructure.router import router as proyectos_router
 from src.features.register.infrastructure.router import router as register_router
 from src.features.roles.infrastructure.router import router as roles_router
@@ -76,6 +77,7 @@ def create_app() -> FastAPI:
     app.include_router(cotizaciones_router, prefix=settings.api_prefix)
     app.include_router(equipos_router, prefix=settings.api_prefix)
     app.include_router(proyectos_router, prefix=settings.api_prefix)
+    app.include_router(membresia_router, prefix=settings.api_prefix)
     app.include_router(auditoria_precios_router, prefix=settings.api_prefix)
 
     return app

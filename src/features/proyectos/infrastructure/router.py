@@ -126,4 +126,6 @@ def _out(p) -> dict:
         "estado": p.estado,
         "fecha_creacion": p.fecha_creacion,
         "total_presupuestos": p.total_presupuestos,
+        "es_dueno": p.es_dueno,
     }
+

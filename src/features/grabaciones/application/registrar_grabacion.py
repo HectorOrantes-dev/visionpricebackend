@@ -8,11 +8,15 @@ import hashlib
 from dataclasses import dataclass
 from datetime import datetime
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.features.grabaciones.domain.entities import Grabacion, NuevaGrabacion
 from src.features.grabaciones.domain.ports import (
     AudioSubmissionPort,
     GrabacionRepository,
 )
+from src.shared.errors import Forbidden
+from src.shared.proyecto_acceso import puede_acceder as _puede_acceder
 from src.shared.timeutils import to_naive_utc, utcnow
 
 
@@ -31,12 +35,20 @@ class RegistrarGrabacionCommand:
 
 class RegistrarGrabacion:
     def __init__(
-        self, repo: GrabacionRepository, audio_port: AudioSubmissionPort
+        self,
+        repo: GrabacionRepository,
+        audio_port: AudioSubmissionPort,
+        session: AsyncSession,
     ) -> None:
         self._repo = repo
         self._audio = audio_port
+        self._session = session
 
     async def execute(self, cmd: RegistrarGrabacionCommand) -> Grabacion:
+        if cmd.proyecto_id is not None:
+            if not await _puede_acceder(self._session, cmd.proyecto_id, cmd.usuario_id):
+                raise Forbidden("No tienes acceso a este proyecto.")
+
         # Idempotencia (cola offline): si ya subió con ese local_id, devuelve la
         # existente sin reprocesar el audio.
         if cmd.local_id:

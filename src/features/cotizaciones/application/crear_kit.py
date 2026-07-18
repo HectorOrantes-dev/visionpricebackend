@@ -7,6 +7,8 @@ cada uno con el motor de instalación y arma N líneas por superficie.
 import math
 from dataclasses import dataclass
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.features.cotizaciones.domain.entities import Cotizacion, LineaCotizacion
 from src.features.cotizaciones.domain.motor_instalacion import (
     CRUCETAS_POR_PIEZA,
@@ -19,7 +21,8 @@ from src.features.cotizaciones.domain.ports import (
     CotizacionRepository,
     ProveedoresPort,
 )
-from src.shared.errors import ValidationError
+from src.shared.errors import Forbidden, ValidationError
+from src.shared.proyecto_acceso import puede_acceder as _puede_acceder
 
 
 @dataclass
@@ -46,13 +49,19 @@ class CrearCotizacionKit:
         self,
         repo: CotizacionRepository,
         proveedores: ProveedoresPort,
+        session: AsyncSession,
         merma: float = 0.0,
     ) -> None:
         self._repo = repo
         self._proveedores = proveedores
+        self._session = session
         self._merma = merma
 
     async def execute(self, cmd: CrearKitCommand) -> Cotizacion:
+        # Verificar acceso: dueño O colaborador.
+        if not await _puede_acceder(self._session, cmd.proyecto_id, cmd.usuario_id):
+            raise Forbidden("No tienes acceso a este proyecto.")
+
         if not cmd.superficies:
             raise ValidationError("La cotización no tiene superficies.")
 

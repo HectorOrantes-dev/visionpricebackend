@@ -9,6 +9,8 @@ y convierte m² → cantidad con el rendimiento de cada producto:
 """
 from dataclasses import dataclass
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.features.cotizaciones.domain.entities import (
     Cotizacion,
     LineaCotizacion,
@@ -18,7 +20,8 @@ from src.features.cotizaciones.domain.ports import (
     CotizacionRepository,
     ProveedoresPort,
 )
-from src.shared.errors import ValidationError
+from src.shared.errors import Forbidden, ValidationError
+from src.shared.proyecto_acceso import puede_acceder as _puede_acceder
 
 
 @dataclass
@@ -49,13 +52,19 @@ class CrearCotizacion:
         self,
         repo: CotizacionRepository,
         proveedores: ProveedoresPort,
+        session: AsyncSession,
         merma: float = 0.08,
     ) -> None:
         self._repo = repo
         self._proveedores = proveedores
+        self._session = session
         self._merma = merma
 
     async def execute(self, cmd: CrearCotizacionCommand) -> Cotizacion:
+        # Verificar que el usuario sea dueño o colaborador del proyecto.
+        if not await _puede_acceder(self._session, cmd.proyecto_id, cmd.usuario_id):
+            raise Forbidden("No tienes acceso a este proyecto.")
+
         if not cmd.items:
             raise ValidationError("La cotización no tiene productos.")
 

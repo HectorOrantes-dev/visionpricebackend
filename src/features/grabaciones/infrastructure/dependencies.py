@@ -28,6 +28,7 @@ def get_registrar_grabacion(
     return RegistrarGrabacion(
         repo=SqlAlchemyGrabacionRepository(session),
         audio_port=ExtractionsAudioAdapter(),
+        session=session,
     )
 
 

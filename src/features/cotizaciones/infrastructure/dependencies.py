@@ -65,4 +65,5 @@ def get_generar_pdf_proyecto(
     return GenerarPdfProyecto(
         repo=SqlAlchemyCotizacionRepository(session),
         renderer=ReportLabPdfRenderer(),
+        session=session,
     )

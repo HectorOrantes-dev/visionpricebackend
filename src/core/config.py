@@ -80,6 +80,7 @@ class Settings(BaseSettings):
     two_factor_timeout: int = 20
     # Máximo de intentos de código por desafío (anti fuerza bruta).
     two_factor_max_intentos: int = 5
+    two_factor_api_key: str = ""
 
     # --- Microservicio de Extracciones (ML) ---
     extractions_base_url: str = ""

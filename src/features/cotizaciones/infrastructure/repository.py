@@ -111,10 +111,14 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
     async def listar_cotizaciones_de_proyecto(
         self, proyecto_id: int, usuario_id: int
     ) -> list[Cotizacion]:
+        """Lista TODAS las cotizaciones del proyecto (de cualquier miembro).
+
+        La verificación de acceso (puede_acceder) se hace antes de llamar
+        este método, en el caso de uso GenerarPdfProyecto.
+        """
         result = await self._session.execute(
             select(Presupuesto).where(
                 Presupuesto.proyecto_id == proyecto_id,
-                Presupuesto.usuario_id == usuario_id,
                 Presupuesto.estado.in_(["borrador", "confirmado"]),
             ).order_by(Presupuesto.id)
         )
@@ -159,14 +163,13 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
     async def obtener_info_proyecto(
         self, proyecto_id: int, usuario_id: int
     ) -> InfoProyectoPdf | None:
-        # Join Proyecto y Usuario
+        """Info del proyecto para el PDF. No filtra por dueño:
+        el guard de acceso ya se verificó en el caso de uso.
+        """
         result = await self._session.execute(
             select(Proyecto.nombre, Proyecto.direccion, Usuario.nombre.label("usuario_nombre"))
             .join(Usuario, Usuario.id == Proyecto.usuario_id)
-            .where(
-                Proyecto.id == proyecto_id,
-                Proyecto.usuario_id == usuario_id
-            )
+            .where(Proyecto.id == proyecto_id)
         )
         row = result.first()
         if not row:

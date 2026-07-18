@@ -109,6 +109,41 @@ class ProyectoColaborador(Base):
     )
 
 
+class ProyectoInvitacion(Base):
+    """Código de invitación multiuso para unirse a un proyecto.
+
+    Un código es válido mientras su estado sea 'activa' y no haya pasado
+    fecha_expiracion (creacion + 3 días por defecto). Es multiuso: cada vez
+    que alguien lo usa se incrementa el contador `usos`.
+    Estados: activa | expirada | revocada
+    """
+
+    __tablename__ = "proyecto_invitaciones"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    proyecto_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("proyectos.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    codigo: Mapped[str] = mapped_column(String(16), unique=True, nullable=False)
+    rol_en_proyecto: Mapped[str] = mapped_column(String(50), nullable=False)
+    estado: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="activa", default="activa"
+    )
+    usos: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0", default=0
+    )
+    invitado_por: Mapped[int] = mapped_column(
+        Integer, ForeignKey("usuarios.id"), nullable=False
+    )
+    fecha_creacion: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+    fecha_expiracion: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
 class GrabacionAudio(Base):
     __tablename__ = "grabaciones_audio"
     __table_args__ = (

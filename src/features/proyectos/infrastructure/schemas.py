@@ -31,3 +31,5 @@ class ProyectoOut(BaseModel):
     estado: str
     fecha_creacion: datetime
     total_presupuestos: int
+    es_dueno: bool = True  # True = propietario, False = colaborador
+
