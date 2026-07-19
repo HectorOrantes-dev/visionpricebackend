@@ -104,6 +104,15 @@ class Settings(BaseSettings):
     # Los microservicios de ML y Pagos llaman de vuelta con este X-Api-Key.
     webhook_api_key: str = "cambia-esto-por-una-api-key-interna"
 
+    # --- API Gateway (tráfico móvil entrante vía el gateway) ---
+    # Fase actual: OPCIONAL. Si está vacío, GatewayKeyMiddleware no hace nada
+    # (comportamiento de hoy, sin gateway). Si está seteado, valida el header
+    # X-Gateway-Key CUANDO viene, pero todavía deja pasar requests sin el
+    # header (para no romper tráfico directo mientras el móvil migra a pegarle
+    # al gateway). Cuando el rollout esté completo, cambiar a modo estricto
+    # (ver src/shared/gateway_key.py).
+    gateway_shared_key: str = ""
+
     # --- Auditoría de precios (detección de anomalías, sin ML) ---
     # Decimales para la rejilla de zona (2 ≈ ~1.1 km). Margen vs mediana y
     # mínimo de muestras para aplicar IQR/MAD.

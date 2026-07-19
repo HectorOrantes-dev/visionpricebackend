@@ -40,6 +40,7 @@ from src.features.recomendaciones.infrastructure.router import (
 from src.features.register.infrastructure.router import router as register_router
 from src.features.roles.infrastructure.router import router as roles_router
 from src.shared.errors import register_error_handlers
+from src.shared.gateway_key import GatewayKeyMiddleware
 from src.shared.idempotency import IdempotencyMiddleware
 from src.shared.schemas import HealthOut
 from src.shared.security_headers import SecurityHeadersMiddleware
@@ -57,6 +58,9 @@ def create_app() -> FastAPI:
     app.add_middleware(IdempotencyMiddleware)
     # Cabeceras de seguridad en TODAS las respuestas.
     app.add_middleware(SecurityHeadersMiddleware)
+    # Gateway: hoy opcional (ver src/shared/gateway_key.py) — valida el
+    # header si viene, no lo exige todavía.
+    app.add_middleware(GatewayKeyMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
