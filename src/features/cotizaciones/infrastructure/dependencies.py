@@ -37,6 +37,7 @@ def get_crear_cotizacion(
     return CrearCotizacion(
         repo=SqlAlchemyCotizacionRepository(session),
         proveedores=ProvidersAdapter(),
+        session=session,
         merma=settings.cotizacion_merma,
     )
 
@@ -47,6 +48,7 @@ def get_crear_kit(
     return CrearCotizacionKit(
         repo=SqlAlchemyCotizacionRepository(session),
         proveedores=ProvidersAdapter(),
+        session=session,
         merma=settings.cotizacion_merma,
     )
 
