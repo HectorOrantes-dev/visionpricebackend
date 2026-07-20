@@ -153,7 +153,13 @@ async def ml_callback(
             modelo_voice_to_text=body.modelo_voice_to_text,
             confianza=body.confianza,
             version_modelo=body.version_modelo,
+            error=body.error,
+            error_mensaje=body.error_mensaje,
         )
     )
-    _log.info("Grabacion %s marcada como sincronizado", body.grabacion_id)
+    _log.info(
+        "Grabacion %s marcada como %s",
+        body.grabacion_id,
+        "error" if body.error else "sincronizado",
+    )
     return MLCallbackResponse(received=True, grabacion_id=body.grabacion_id)

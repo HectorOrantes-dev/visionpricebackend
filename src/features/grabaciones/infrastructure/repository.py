@@ -157,10 +157,17 @@ class SqlAlchemyGrabacionRepository(GrabacionRepository):
         fila.estado_sincronizacion = "procesando"
         await self._session.commit()
 
-    async def guardar_resultado_ml(self, resultado: ResultadoML) -> None:
+    async def guardar_resultado_ml(self, resultado: ResultadoML) -> int:
         fila = await self._session.get(GrabacionAudio, resultado.grabacion_id)
         if fila is None:
             raise NotFound("Grabación no encontrada.")
+
+        # El micro reportó fallo: marca la grabación como error y termina (no hay
+        # transcripción que persistir). El usuario_id se devuelve para notificar.
+        if resultado.error:
+            fila.estado_sincronizacion = "error"
+            await self._session.commit()
+            return fila.usuario_id
 
         if resultado.object_storage_key:
             fila.object_storage_key = resultado.object_storage_key
@@ -210,3 +217,4 @@ class SqlAlchemyGrabacionRepository(GrabacionRepository):
         fila.estado_sincronizacion = "sincronizado"
         fila.fecha_sincronizacion = utcnow()
         await self._session.commit()
+        return fila.usuario_id

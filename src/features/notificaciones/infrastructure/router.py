@@ -3,7 +3,7 @@
 - Usuario (JWT): ver su feed y marcar como leída.
 - Interno (X-Api-Key): job de vencimientos + emitir eventos de negocio.
 """
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
 from src.features.notificaciones.application.consultar import (
     ListarNotificaciones,
@@ -72,9 +72,19 @@ async def marcar_leida(
     summary="Job (cron): generar avisos de suscripciones por vencer/vencidas",
 )
 async def job_vencimientos(
+    dias: int | None = Query(
+        default=None,
+        ge=1,
+        le=60,
+        description=(
+            "Umbral de días para 'por vencer'. Omitido usa el default "
+            "(NOTIFICACIONES_DIAS_AVISO). El cron puede llamar dos veces: "
+            "sin parámetro (7 días) y con dias=1 (aviso de último día)."
+        ),
+    ),
     use_case: GenerarNotificacionesVencimiento = Depends(get_generar_vencimientos),
 ) -> JobResultOut:
-    res = await use_case.execute()
+    res = await use_case.execute(dias_aviso=dias)
     return JobResultOut(por_vencer=res.por_vencer, vencidas=res.vencidas)
 
 

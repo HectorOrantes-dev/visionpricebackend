@@ -42,13 +42,23 @@ def get_generar_vencimientos(
     )
 
 
-def get_emitir_evento(
-    session: AsyncSession = Depends(get_session),
-) -> EmitirEvento:
+def build_emitir_evento(session: AsyncSession) -> EmitirEvento:
+    """Fábrica reutilizable de EmitirEvento.
+
+    La usan otras features (grabaciones, pagos, proyectos) para emitir push
+    reales reutilizando el mismo repo de notificaciones y el mismo PushNotifier,
+    sin duplicar el cableado de Firebase.
+    """
     return EmitirEvento(
         repo=SqlAlchemyNotificacionRepository(session),
         push=_build_push(session),
     )
+
+
+def get_emitir_evento(
+    session: AsyncSession = Depends(get_session),
+) -> EmitirEvento:
+    return build_emitir_evento(session)
 
 
 def get_listar_notificaciones(

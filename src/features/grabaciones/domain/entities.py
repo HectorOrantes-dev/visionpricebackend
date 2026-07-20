@@ -58,9 +58,13 @@ class ResultadoML:
     """Lo que devuelve el microservicio de ML por el webhook."""
 
     grabacion_id: int
-    texto: str
+    texto: str = ""
     parametros_json: dict | None = None
     object_storage_key: str | None = None
     modelo_voice_to_text: str | None = None
     confianza: float | None = None
     version_modelo: str | None = None
+    # Si el micro de ML no pudo procesar el audio, manda error=True; en ese caso
+    # se marca la grabación como "error" y se notifica GRABACION_ERROR.
+    error: bool = False
+    error_mensaje: str | None = None

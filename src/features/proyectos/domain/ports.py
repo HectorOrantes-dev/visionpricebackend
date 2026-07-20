@@ -46,6 +46,13 @@ class MembresiaRepository(ABC):
         """True si el usuario es el creador del proyecto."""
 
     @abstractmethod
+    async def obtener_dueno(self, proyecto_id: int) -> int | None:
+        """usuario_id del dueño del proyecto (None si no existe).
+
+        Se usa para notificar al dueño cuando alguien se une a su proyecto.
+        """
+
+    @abstractmethod
     async def agregar(
         self, proyecto_id: int, usuario_id: int, rol: str
     ) -> Miembro:

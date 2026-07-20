@@ -1,7 +1,7 @@
 """Adaptador SQLAlchemy del entitlement."""
 from datetime import datetime
 
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.features.pagos.domain.ports import EntitlementRepository
@@ -11,6 +11,12 @@ from src.shared.models import Usuario
 class SqlAlchemyEntitlementRepository(EntitlementRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def leer_plan(self, usuario_id: int) -> str | None:
+        result = await self._session.execute(
+            select(Usuario.plan_activo).where(Usuario.id == usuario_id)
+        )
+        return result.scalar_one_or_none()
 
     async def actualizar(
         self,

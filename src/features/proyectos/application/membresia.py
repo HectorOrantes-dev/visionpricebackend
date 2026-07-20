@@ -14,6 +14,11 @@ import string
 from dataclasses import dataclass, field
 from datetime import timedelta
 
+from src.features.notificaciones.application.emitir_evento import (
+    EmitirEvento,
+    EventoCommand,
+)
+from src.features.notificaciones.domain.entities import TipoNotificacion
 from src.features.proyectos.domain.entities import Invitacion, Miembro
 from src.features.proyectos.domain.ports import (
     CorreoPort,
@@ -126,9 +131,11 @@ class UnirseAProyecto:
         self,
         membresia_repo: MembresiaRepository,
         inv_repo: InvitacionRepository,
+        emitir: EmitirEvento | None = None,
     ) -> None:
         self._mem = membresia_repo
         self._inv = inv_repo
+        self._emitir = emitir
 
     async def execute(self, cmd: UnirseAProyectoCommand) -> Miembro:
         inv = await self._inv.obtener_por_codigo(cmd.codigo)
@@ -156,7 +163,34 @@ class UnirseAProyecto:
             rol=inv.rol_en_proyecto,
         )
         await self._inv.incrementar_usos(inv.id)
+        await self._notificar_dueno(inv.proyecto_id, cmd.usuario_id)
         return miembro
+
+    async def _notificar_dueno(self, proyecto_id: int, nuevo_usuario_id: int) -> None:
+        """Avisa al dueño que se unió un colaborador. Sin PII en el cuerpo:
+        la referencia (proyecto_id) permite a la app resolver los detalles."""
+        if self._emitir is None:
+            return
+        dueno_id = await self._mem.obtener_dueno(proyecto_id)
+        # No notificar si el que se une es el propio dueño (no debería ocurrir:
+        # ya se validó arriba) ni si el proyecto no tiene dueño resoluble.
+        if dueno_id is None or dueno_id == nuevo_usuario_id:
+            return
+        try:
+            await self._emitir.execute(
+                EventoCommand(
+                    usuario_id=dueno_id,
+                    tipo=TipoNotificacion.INVITACION_PROYECTO,
+                    referencia_tipo="proyecto",
+                    referencia_id=proyecto_id,
+                )
+            )
+        except Exception as exc:  # noqa: BLE001
+            _log.warning(
+                "No se pudo notificar union al dueno del proyecto %s: %s",
+                proyecto_id,
+                exc,
+            )
 
 
 # ---------------------------------------------------------------------------

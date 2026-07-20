@@ -28,6 +28,9 @@ from src.features.proyectos.infrastructure.membresia_repository import (
 from src.features.proyectos.infrastructure.repository import (
     SqlAlchemyProyectoRepository,
 )
+from src.features.notificaciones.infrastructure.dependencies import (
+    build_emitir_evento,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -101,6 +104,7 @@ def get_unirse_a_proyecto(
     return UnirseAProyecto(
         membresia_repo=_mem_repo(session),
         inv_repo=_inv_repo(session),
+        emitir=build_emitir_evento(session),
     )
 
 

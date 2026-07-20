@@ -9,9 +9,15 @@ from src.features.pagos.application.actualizar_entitlement import (
 from src.features.pagos.infrastructure.repository import (
     SqlAlchemyEntitlementRepository,
 )
+from src.features.notificaciones.infrastructure.dependencies import (
+    build_emitir_evento,
+)
 
 
 def get_actualizar_entitlement(
     session: AsyncSession = Depends(get_session),
 ) -> ActualizarEntitlement:
-    return ActualizarEntitlement(repo=SqlAlchemyEntitlementRepository(session))
+    return ActualizarEntitlement(
+        repo=SqlAlchemyEntitlementRepository(session),
+        emitir=build_emitir_evento(session),
+    )

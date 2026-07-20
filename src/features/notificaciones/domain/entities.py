@@ -8,17 +8,21 @@ class TipoNotificacion:
 
     SUSCRIPCION_POR_VENCER = "suscripcion_por_vencer"
     SUSCRIPCION_VENCIDA = "suscripcion_vencida"
+    SUSCRIPCION_ACTIVADA = "suscripcion_activada"
     GRABACION_PROCESADA = "grabacion_procesada"
     GRABACION_ERROR = "grabacion_error"
     PRESUPUESTO_LISTO = "presupuesto_listo"
+    INVITACION_PROYECTO = "invitacion_proyecto"
     BIENVENIDA = "bienvenida"
 
     TODOS = {
         SUSCRIPCION_POR_VENCER,
         SUSCRIPCION_VENCIDA,
+        SUSCRIPCION_ACTIVADA,
         GRABACION_PROCESADA,
         GRABACION_ERROR,
         PRESUPUESTO_LISTO,
+        INVITACION_PROYECTO,
         BIENVENIDA,
     }
 

@@ -25,6 +25,12 @@ class SqlAlchemyMembresiaRepository(MembresiaRepository):
         )
         return row.scalar_one_or_none() is not None
 
+    async def obtener_dueno(self, proyecto_id: int) -> int | None:
+        row = await self._session.execute(
+            select(Proyecto.usuario_id).where(Proyecto.id == proyecto_id)
+        )
+        return row.scalar_one_or_none()
+
     async def es_miembro(self, proyecto_id: int, usuario_id: int) -> bool:
         row = await self._session.execute(
             select(ProyectoColaborador.proyecto_id).where(

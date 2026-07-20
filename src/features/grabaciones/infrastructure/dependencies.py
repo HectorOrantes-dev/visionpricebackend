@@ -20,6 +20,9 @@ from src.features.grabaciones.infrastructure.audio_adapter import (
 from src.features.grabaciones.infrastructure.repository import (
     SqlAlchemyGrabacionRepository,
 )
+from src.features.notificaciones.infrastructure.dependencies import (
+    build_emitir_evento,
+)
 
 
 def get_registrar_grabacion(
@@ -35,7 +38,10 @@ def get_registrar_grabacion(
 def get_procesar_resultado_ml(
     session: AsyncSession = Depends(get_session),
 ) -> ProcesarResultadoML:
-    return ProcesarResultadoML(repo=SqlAlchemyGrabacionRepository(session))
+    return ProcesarResultadoML(
+        repo=SqlAlchemyGrabacionRepository(session),
+        emitir=build_emitir_evento(session),
+    )
 
 
 def get_listar_grabaciones(

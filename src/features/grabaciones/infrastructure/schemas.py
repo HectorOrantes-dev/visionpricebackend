@@ -44,12 +44,16 @@ class MLCallbackRequest(BaseModel):
     """Payload que envía el microservicio de ML al terminar de procesar."""
 
     grabacion_id: int
-    texto: str
+    texto: str = ""  # vacío cuando error=True (no hubo transcripción)
     parametros_json: dict | None = None   # opcional: si BETO falla, va solo el texto
     object_storage_key: str | None = None
     modelo_voice_to_text: str | None = Field(default=None, max_length=100)
     confianza: float | None = Field(default=None, ge=0, le=1)
     version_modelo: str | None = Field(default=None, max_length=50)
+    # El micro reporta un fallo de procesamiento con error=True (retrocompatible:
+    # las llamadas de éxito existentes no mandan estos campos).
+    error: bool = False
+    error_mensaje: str | None = Field(default=None, max_length=500)
 
 
 class MLCallbackResponse(BaseModel):

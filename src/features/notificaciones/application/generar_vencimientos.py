@@ -39,11 +39,16 @@ class GenerarNotificacionesVencimiento:
         self._push = push
         self._dias_aviso = dias_aviso
 
-    async def execute(self) -> ResultadoJob:
+    async def execute(self, dias_aviso: int | None = None) -> ResultadoJob:
+        # El cron puede llamar con umbrales distintos (ej. 7 y 1). El dedupe se
+        # ventana por `dias`, así el aviso de "1 día antes" no se pisa con el de
+        # "7 días" (que ya se envió ~6 días atrás, fuera de la ventana de 1 día).
+        dias = dias_aviso if dias_aviso is not None else self._dias_aviso
+
         por_vencer = 0
-        for s in await self._repo.suscripciones_por_vencer(self._dias_aviso):
+        for s in await self._repo.suscripciones_por_vencer(dias):
             if await self._repo.existe_reciente(
-                s.usuario_id, TipoNotificacion.SUSCRIPCION_POR_VENCER, self._dias_aviso
+                s.usuario_id, TipoNotificacion.SUSCRIPCION_POR_VENCER, dias
             ):
                 continue
             titulo, cuerpo = mensajes.vencimiento_por_vencer(

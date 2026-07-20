@@ -34,6 +34,14 @@ DEFAULTS: dict[str, tuple[str, str]] = {
         "Tu presupuesto está listo",
         "Generamos tu presupuesto. Ya puedes revisarlo y exportarlo.",
     ),
+    TipoNotificacion.SUSCRIPCION_ACTIVADA: (
+        "¡Tu suscripción está activa!",
+        "Tu plan quedó activo. Ya tienes acceso a todas las funciones de VisionPrice.",
+    ),
+    TipoNotificacion.INVITACION_PROYECTO: (
+        "Nuevo colaborador en tu proyecto",
+        "Alguien se unió a un proyecto que administras. Ábrelo para ver los detalles.",
+    ),
     TipoNotificacion.BIENVENIDA: (
         "¡Bienvenido a VisionPrice!",
         "Tu cuenta está lista. Empieza a crear tus presupuestos por voz.",

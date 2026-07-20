@@ -48,8 +48,11 @@ class GrabacionRepository(ABC):
         """Borra la grabación (rollback si falla el envío al ML)."""
 
     @abstractmethod
-    async def guardar_resultado_ml(self, resultado: ResultadoML) -> None:
+    async def guardar_resultado_ml(self, resultado: ResultadoML) -> int:
         """Persiste transcripción + extracción y marca estado=sincronizado.
+
+        Si resultado.error es True, marca estado=error y no crea transcripción.
+        Devuelve el usuario_id dueño de la grabación (para emitir la notificación).
 
         Debe ser idempotente: si ya existe transcripción/extracción para esa
         grabación, no duplica (el webhook puede reintentarse).
