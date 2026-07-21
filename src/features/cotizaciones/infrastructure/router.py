@@ -19,6 +19,10 @@ from src.features.cotizaciones.application.crear_kit import (
     CrearKitCommand,
     SuperficieKit,
 )
+from src.features.cotizaciones.application.generar_borrador import (
+    GenerarBorradorCotizacion,
+    GenerarBorradorCommand,
+)
 from src.features.cotizaciones.application.generar_pdf import GenerarPdf, GenerarPdfProyecto
 from src.features.cotizaciones.application.listar_pdfs import ListarMisPdfs
 from src.features.cotizaciones.application.listar_productos import (
@@ -29,6 +33,7 @@ from src.features.cotizaciones.infrastructure.dependencies import (
     get_calcular_areas,
     get_crear_cotizacion,
     get_crear_kit,
+    get_generar_borrador,
     get_generar_pdf,
     get_generar_pdf_proyecto,
     get_listar_pdfs,
@@ -42,6 +47,8 @@ from src.features.recomendaciones.infrastructure.repository import (
     SqlAlchemyRecomendacionUsoRepository,
 )
 from src.features.cotizaciones.infrastructure.schemas import (
+    BorradorOut,
+    BorradorRequest,
     CalculoOut,
     CalculoRequest,
     CotizacionOut,
@@ -116,6 +123,41 @@ async def productos_cercanos(
         )
     )
     return [ProductoCercanoOut(**p.__dict__) for p in productos]
+
+
+@router.post(
+    "/borrador",
+    response_model=BorradorOut,
+    summary=(
+        "Borrador automático: toma la extracción de una grabación, empareja "
+        "proveedores cercanos y arma una cotización pre-llenada para confirmar"
+    ),
+)
+async def borrador(
+    body: BorradorRequest,
+    user: CurrentUser = Depends(get_current_user),
+    use_case: GenerarBorradorCotizacion = Depends(get_generar_borrador),
+) -> BorradorOut:
+    resultado = await use_case.execute(
+        GenerarBorradorCommand(grabacion_id=body.grabacion_id, usuario_id=user.id)
+    )
+    return BorradorOut(
+        proyecto_id=resultado.proyecto_id,
+        grabacion_id=resultado.grabacion_id,
+        superficies=[
+            {
+                "categoria": s.categoria,
+                "descripcion": s.descripcion,
+                "area_m2": s.area_m2,
+                "metodo": s.metodo,
+                "lineas": [ln.__dict__ for ln in s.lineas],
+            }
+            for s in resultado.superficies
+        ],
+        total_estimado=resultado.total_estimado,
+        advertencias=resultado.advertencias,
+        cuerpo_confirmacion=resultado.cuerpo_confirmacion,
+    )
 
 
 @router.post(

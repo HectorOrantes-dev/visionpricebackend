@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from src.features.cotizaciones.domain.entities import (
     Cotizacion,
     CotizacionPdfItem,
+    DatosParaBorrador,
     LineaCotizacion,
     ProductoCercano,
     InfoProyectoPdf,
@@ -69,6 +70,14 @@ class CotizacionRepository(ABC):
     ) -> list[CotizacionPdfItem]:
         """Todas las cotizaciones (de todas las obras) creadas por el usuario,
         sin importar su rol — cada una descargable como PDF."""
+
+    @abstractmethod
+    async def datos_para_borrador(
+        self, grabacion_id: int
+    ) -> DatosParaBorrador | None:
+        """Proyecto + ubicación + extracción (o transcripción) de una grabación,
+        para armar el borrador automático de cotización. No filtra por dueño:
+        el guard de acceso (puede_acceder) se aplica en el caso de uso."""
 
 
 class PdfRenderer(ABC):

@@ -8,11 +8,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.features.cotizaciones.domain.entities import (
     Cotizacion,
     CotizacionPdfItem,
+    DatosParaBorrador,
     LineaCotizacion,
     InfoProyectoPdf,
 )
 from src.features.cotizaciones.domain.ports import CotizacionRepository
-from src.shared.models import DetallePresupuesto, Presupuesto, Transcripcion, Proyecto, Usuario
+from src.shared.models import (
+    DetallePresupuesto,
+    ExtraccionLLM,
+    GrabacionAudio,
+    Presupuesto,
+    Transcripcion,
+    Proyecto,
+    Usuario,
+)
 
 
 class SqlAlchemyCotizacionRepository(CotizacionRepository):
@@ -213,4 +222,36 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
             nombre_proyecto=row.nombre,
             direccion=row.direccion,
             nombre_usuario=row.usuario_nombre,
+        )
+
+    async def datos_para_borrador(
+        self, grabacion_id: int
+    ) -> DatosParaBorrador | None:
+        result = await self._session.execute(
+            select(
+                GrabacionAudio.proyecto_id,
+                Proyecto.latitud,
+                Proyecto.longitud,
+                Transcripcion.texto,
+                ExtraccionLLM.parametros_json,
+            )
+            .select_from(GrabacionAudio)
+            .outerjoin(
+                Transcripcion, Transcripcion.grabacion_id == GrabacionAudio.id
+            )
+            .outerjoin(
+                ExtraccionLLM, ExtraccionLLM.transcripcion_id == Transcripcion.id
+            )
+            .outerjoin(Proyecto, Proyecto.id == GrabacionAudio.proyecto_id)
+            .where(GrabacionAudio.id == grabacion_id)
+        )
+        row = result.first()
+        if row is None or row.proyecto_id is None:
+            return None
+        return DatosParaBorrador(
+            proyecto_id=row.proyecto_id,
+            lat=float(row.latitud) if row.latitud is not None else None,
+            lng=float(row.longitud) if row.longitud is not None else None,
+            parametros_json=row.parametros_json,
+            texto=row.texto,
         )

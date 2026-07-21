@@ -133,3 +133,38 @@ class CotizacionOut(BaseModel):
     fecha: datetime
     mano_obra: float | None = None
     lineas: list[LineaOut]
+
+
+# --- Borrador automático (voz -> extracción -> proveedores cercanos) ---
+class BorradorRequest(BaseModel):
+    grabacion_id: int
+
+
+class LineaBorradorOut(BaseModel):
+    rol: str
+    producto_id: str | None
+    nombre: str
+    proveedor_nombre: str | None
+    distancia_km: float | None
+    cantidad: float
+    unidad: str
+    precio_unitario: float
+    subtotal: float
+    detalle: str
+
+
+class SuperficieBorradorOut(BaseModel):
+    categoria: str
+    descripcion: str | None
+    area_m2: float | None
+    metodo: str
+    lineas: list[LineaBorradorOut]
+
+
+class BorradorOut(BaseModel):
+    proyecto_id: int
+    grabacion_id: int
+    superficies: list[SuperficieBorradorOut]
+    total_estimado: float
+    advertencias: list[str]
+    cuerpo_confirmacion: dict

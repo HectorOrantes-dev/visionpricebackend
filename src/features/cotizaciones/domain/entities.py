@@ -94,3 +94,50 @@ class InfoProyectoPdf:
     nombre_proyecto: str
     direccion: str | None
     nombre_usuario: str
+
+
+@dataclass
+class DatosParaBorrador:
+    """Lo que hace falta para armar el borrador automático de una grabación:
+    la ubicación del proyecto (para buscar proveedores cercanos) y el JSON
+    crudo de la extracción (o el texto, si el ML todavía no la estructuró)."""
+    proyecto_id: int
+    lat: float | None
+    lng: float | None
+    parametros_json: dict | None
+    texto: str | None
+
+
+@dataclass
+class LineaBorrador:
+    rol: str  # principal | adhesivo | cruceta | boquilla | material
+    producto_id: str | None
+    nombre: str
+    proveedor_nombre: str | None
+    distancia_km: float | None
+    cantidad: float
+    unidad: str
+    precio_unitario: float
+    subtotal: float
+    detalle: str
+
+
+@dataclass
+class SuperficieBorrador:
+    categoria: str
+    descripcion: str | None
+    area_m2: float | None
+    metodo: str  # kit | rendimiento
+    lineas: list[LineaBorrador]
+
+
+@dataclass
+class BorradorCotizacion:
+    proyecto_id: int
+    grabacion_id: int
+    superficies: list[SuperficieBorrador]
+    total_estimado: float
+    advertencias: list[str]
+    # Cuerpo(s) listo(s) para POST /cotizaciones (simple) y/o
+    # POST /cotizaciones/kit — el usuario los ajusta y confirma.
+    cuerpo_confirmacion: dict

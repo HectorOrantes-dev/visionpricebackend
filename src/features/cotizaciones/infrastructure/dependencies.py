@@ -7,11 +7,15 @@ from src.core.database import get_session
 from src.features.cotizaciones.application.calcular_areas import CalcularAreas
 from src.features.cotizaciones.application.crear_cotizacion import CrearCotizacion
 from src.features.cotizaciones.application.crear_kit import CrearCotizacionKit
+from src.features.cotizaciones.application.generar_borrador import (
+    GenerarBorradorCotizacion,
+)
 from src.features.cotizaciones.application.generar_pdf import GenerarPdf, GenerarPdfProyecto
 from src.features.cotizaciones.application.listar_pdfs import ListarMisPdfs
 from src.features.cotizaciones.application.listar_productos import (
     ListarProductosCercanos,
 )
+from src.features.extracciones.application.validar_extraccion import ValidarExtraccion
 from src.features.cotizaciones.infrastructure.pdf import ReportLabPdfRenderer
 from src.features.cotizaciones.infrastructure.proveedores_adapter import (
     ProvidersAdapter,
@@ -66,6 +70,19 @@ def get_listar_pdfs(
     session: AsyncSession = Depends(get_session),
 ) -> ListarMisPdfs:
     return ListarMisPdfs(repo=SqlAlchemyCotizacionRepository(session))
+
+
+def get_generar_borrador(
+    session: AsyncSession = Depends(get_session),
+) -> GenerarBorradorCotizacion:
+    return GenerarBorradorCotizacion(
+        repo=SqlAlchemyCotizacionRepository(session),
+        proveedores=ProvidersAdapter(),
+        validar=ValidarExtraccion(),
+        session=session,
+        radio_km_default=settings.providers_radio_km_default,
+        merma=settings.cotizacion_merma,
+    )
 
 
 def get_generar_pdf_proyecto(
