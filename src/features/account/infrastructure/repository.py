@@ -23,6 +23,30 @@ class Perfil:
     vigencia_hasta: datetime | None
 
 
+async def actualizar_perfil(
+    session: AsyncSession,
+    usuario_id: int,
+    *,
+    nombre: str | None = None,
+    telefono: str | None = None,
+) -> Perfil | None:
+    """Actualiza solo los campos provistos (no-`None`) del perfil.
+
+    Pensado para el registro simplificado (correo+contraseña+rol): el
+    `nombre`/`teléfono` reales se completan después, aquí — no en el alta.
+    """
+    result = await session.execute(select(Usuario).where(Usuario.id == usuario_id))
+    u = result.scalar_one_or_none()
+    if u is None:
+        return None
+    if nombre is not None:
+        u.nombre = nombre
+    if telefono is not None:
+        u.telefono = telefono  # EncryptedString lo cifra al guardar
+    await session.commit()
+    return await obtener_perfil(session, usuario_id)
+
+
 async def obtener_perfil(session: AsyncSession, usuario_id: int) -> Perfil | None:
     result = await session.execute(
         select(Usuario).options(joinedload(Usuario.rol)).where(Usuario.id == usuario_id)

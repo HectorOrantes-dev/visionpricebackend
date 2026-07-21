@@ -1,7 +1,15 @@
 """Schemas de la feature account."""
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
+
+
+class ActualizarPerfilRequest(BaseModel):
+    """Ambos opcionales: solo se actualiza lo que venga. Pensado para
+    completar `nombre`/`telefono` tras el registro simplificado."""
+
+    nombre: str | None = Field(default=None, min_length=2, max_length=150)
+    telefono: str | None = Field(default=None, max_length=20)
 
 
 class PerfilOut(BaseModel):

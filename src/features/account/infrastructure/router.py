@@ -8,8 +8,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_session
-from src.features.account.infrastructure.repository import obtener_perfil
-from src.features.account.infrastructure.schemas import PerfilOut
+from src.features.account.infrastructure.repository import (
+    actualizar_perfil,
+    obtener_perfil,
+)
+from src.features.account.infrastructure.schemas import (
+    ActualizarPerfilRequest,
+    PerfilOut,
+)
 from src.microservices.payments_gateway import PaymentsGateway
 from src.oauth.dependencies import CurrentUser, get_bearer_token, get_current_user
 from src.shared.errors import NotFound
@@ -32,6 +38,24 @@ async def mi_perfil(
     session: AsyncSession = Depends(get_session),
 ) -> PerfilOut:
     perfil = await obtener_perfil(session, user.id)
+    if perfil is None:
+        raise NotFound("Usuario no encontrado.")
+    return PerfilOut(**perfil.__dict__)
+
+
+@router.patch(
+    "/me/perfil",
+    response_model=PerfilOut,
+    summary="Completa/actualiza nombre y/o teléfono del perfil",
+)
+async def actualizar_mi_perfil(
+    body: ActualizarPerfilRequest,
+    user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> PerfilOut:
+    perfil = await actualizar_perfil(
+        session, user.id, nombre=body.nombre, telefono=body.telefono
+    )
     if perfil is None:
         raise NotFound("Usuario no encontrado.")
     return PerfilOut(**perfil.__dict__)
