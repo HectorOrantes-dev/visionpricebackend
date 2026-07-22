@@ -133,6 +133,18 @@ class CrearCotizacionKit:
                         "La loseta principal no trae dimensiones de pieza; "
                         "no se pueden calcular las crucetas."
                     )
+                if not cruc.piezas_por_paquete or cruc.piezas_por_paquete <= 0:
+                    # Las crucetas NUNCA se venden sueltas; un piezas_por_paquete
+                    # faltante o en 0 (dato de catálogo incompleto) haría que
+                    # paquetes() cotizara cada pieza suelta al precio de la
+                    # bolsa completa (ej. 900 piezas × $35 = $31,500 en vez de
+                    # ~15 bolsas × $35). Se corta acá en vez de cobrar de más.
+                    raise ValidationError(
+                        f"El producto de crucetas '{cruc.nombre}' no tiene "
+                        "piezas_por_paquete configurado en el catálogo del "
+                        "proveedor; no se puede cotizar por pieza suelta. "
+                        "Repórtalo al proveedor para que lo corrija."
+                    )
                 if s.metodo_crucetas not in CRUCETAS_POR_PIEZA:
                     raise ValidationError(
                         f"metodo_crucetas inválido: {s.metodo_crucetas!r}."

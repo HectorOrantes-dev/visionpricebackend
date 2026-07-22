@@ -136,8 +136,35 @@ class CotizacionOut(BaseModel):
 
 
 # --- Borrador automático (voz -> extracción -> proveedores cercanos) ---
+class SuperficieManualRequest(BaseModel):
+    """Superficie puesta a mano cuando el audio no se entendió bien (o el
+    ML no devolvió estructura): reemplaza por completo lo que haya llegado
+    de la extracción para esta cotización."""
+    categoria: Literal["piso", "azulejo", "zoclo", "pintura", "impermeabilizante"]
+    descripcion: str | None = Field(default=None, max_length=150)
+    # Una de las dos formas de dar el área (area_m2 tiene prioridad):
+    area_m2: float | None = Field(default=None, gt=0)
+    largo_m: float | None = Field(default=None, gt=0)
+    ancho_m: float | None = Field(default=None, gt=0)
+    alto_m: float | None = Field(default=None, gt=0)
+    acabado: str | None = None
+    manos_pintura: int | None = Field(default=None, gt=0)
+    requiere_resane: bool = False
+
+    @model_validator(mode="after")
+    def _tiene_medida(self) -> "SuperficieManualRequest":
+        if self.area_m2 is None and not (self.largo_m and self.ancho_m):
+            raise ValueError(
+                "Cada superficie manual necesita area_m2, o largo_m + ancho_m."
+            )
+        return self
+
+
 class BorradorRequest(BaseModel):
     grabacion_id: int
+    # Si vienen, se usan EN VEZ de lo que haya extraído el ML (para cuando el
+    # audio no se entendió bien y el usuario mete las medidas a mano).
+    superficies: list[SuperficieManualRequest] | None = None
 
 
 class LineaBorradorOut(BaseModel):

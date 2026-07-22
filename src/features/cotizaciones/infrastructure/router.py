@@ -139,7 +139,15 @@ async def borrador(
     use_case: GenerarBorradorCotizacion = Depends(get_generar_borrador),
 ) -> BorradorOut:
     resultado = await use_case.execute(
-        GenerarBorradorCommand(grabacion_id=body.grabacion_id, usuario_id=user.id)
+        GenerarBorradorCommand(
+            grabacion_id=body.grabacion_id,
+            usuario_id=user.id,
+            superficies_manual=(
+                [s.model_dump() for s in body.superficies]
+                if body.superficies
+                else None
+            ),
+        )
     )
     return BorradorOut(
         proyecto_id=resultado.proyecto_id,

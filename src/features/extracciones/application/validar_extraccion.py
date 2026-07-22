@@ -24,7 +24,15 @@ class ValidarExtraccion:
 
         raw_superficies: list[dict] = []
         if isinstance(parametros_json, dict):
-            raw_superficies = parametros_json.get("superficies") or []
+            # "items" es el contrato REAL del microservicio de ML
+            # (ExtractionResult: {es_multiple, items: [ExtractionItem]}, con las
+            # medidas anidadas en "dimensiones"). "superficies" se deja como
+            # fallback por si alguna vez cambia/hay un payload plano viejo.
+            raw_superficies = (
+                parametros_json.get("items")
+                or parametros_json.get("superficies")
+                or []
+            )
             # Payload plano de una sola superficie (sin envolver en lista).
             if not raw_superficies and parametros_json.get("categoria"):
                 raw_superficies = [parametros_json]
@@ -40,8 +48,11 @@ class ValidarExtraccion:
                 # regla_de() ya tiene fallback a "rendimiento" para categorías
                 # desconocidas, así que se deja pasar tal cual.
 
-            area = raw.get("area_m2")
-            largo, ancho, alto = raw.get("largo_m"), raw.get("ancho_m"), raw.get("alto_m")
+            # El ML manda las medidas anidadas en "dimensiones" (ExtractionItem);
+            # se acepta también un payload plano (área/largo directo en `raw`).
+            dims = raw.get("dimensiones") if isinstance(raw.get("dimensiones"), dict) else raw
+            area = dims.get("area_m2")
+            largo, ancho, alto = dims.get("largo_m"), dims.get("ancho_m"), dims.get("alto_m")
             if area is None and largo and ancho:
                 calc = calcular_areas(Dimensiones(largo_m=largo, ancho_m=ancho, alto_m=alto))
                 # Pintura de muros usa el área de paredes (perímetro × alto);
@@ -58,6 +69,14 @@ class ValidarExtraccion:
                     f"No se pudo determinar el área para '{categoria or 'superficie'}'."
                 )
 
+            # "descripcion" es del payload plano viejo; el ML real manda
+            # "ubicacion" (ej. "sala") y/o "tipo_superficie" (ej. "piso").
+            descripcion = (
+                raw.get("descripcion")
+                or raw.get("ubicacion")
+                or raw.get("tipo_superficie")
+            )
+
             superficies.append(
                 SuperficieExtraida(
                     categoria=categoria,
@@ -65,7 +84,7 @@ class ValidarExtraccion:
                     largo_m=largo,
                     ancho_m=ancho,
                     alto_m=alto,
-                    descripcion=raw.get("descripcion"),
+                    descripcion=descripcion,
                     acabado=raw.get("acabado"),
                     manos_pintura=raw.get("manos_pintura"),
                     requiere_resane=bool(raw.get("requiere_resane", False)),

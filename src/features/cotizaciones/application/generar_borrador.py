@@ -42,6 +42,10 @@ _ROL_COMPLEMENTO = {
 class GenerarBorradorCommand:
     grabacion_id: int
     usuario_id: int
+    # Si vienen, reemplazan por completo la extracción del ML (audio que no
+    # se entendió bien / el usuario prefiere meter las medidas a mano). Mismo
+    # shape que "superficies" dentro de parametros_json.
+    superficies_manual: list[dict] | None = None
 
 
 class GenerarBorradorCotizacion:
@@ -75,7 +79,14 @@ class GenerarBorradorCotizacion:
                 "proveedores cercanos."
             )
 
-        parametros = self._validar.execute(datos.parametros_json, datos.texto)
+        # Overrides manuales (audio mal entendido / usuario mete medidas a
+        # mano): reemplazan por completo lo que haya devuelto el ML.
+        parametros_json = (
+            {"superficies": cmd.superficies_manual}
+            if cmd.superficies_manual
+            else datos.parametros_json
+        )
+        parametros = self._validar.execute(parametros_json, datos.texto)
         advertencias = list(parametros.advertencias)
 
         superficies_out: list[SuperficieBorrador] = []
@@ -226,6 +237,20 @@ class GenerarBorradorCotizacion:
             comp_candidatos = await self._proveedores.productos_cercanos(
                 lat=lat, lng=lng, radio_km=self._radio_km, categoria=complemento
             )
+            if rol == "cruceta":
+                # Las crucetas NUNCA se venden sueltas: un producto con
+                # piezas_por_paquete faltante/0 (catálogo incompleto del
+                # proveedor) haría que cada pieza se cobrara al precio de la
+                # bolsa completa (ej. 900 piezas × $35 en vez de ~15 bolsas).
+                # Se descarta ese candidato en vez de armar un borrador con
+                # un sobreprecio de ese tipo.
+                validos = [c for c in comp_candidatos if (c.piezas_por_paquete or 0) > 0]
+                if len(validos) < len(comp_candidatos):
+                    avisos.append(
+                        f"Se ignoraron proveedores de '{complemento}' sin "
+                        "piezas_por_paquete configurado (catálogo incompleto)."
+                    )
+                comp_candidatos = validos
             if not comp_candidatos:
                 avisos.append(
                     f"No se encontró '{complemento}' cercano para '{etiqueta}'; "
