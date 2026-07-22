@@ -21,7 +21,7 @@ class ReportLabPdfRenderer(PdfRenderer):
     def render(self, cotizacion: Cotizacion, *, proyecto: str | None = None) -> bytes:
         buffer = BytesIO()
         doc = SimpleDocTemplate(
-            buffer, pagesize=A4, title=f"Cotización #{cotizacion.id}"
+            buffer, pagesize=A4, title=f"Cotización #{cotizacion.numero}"
         )
         styles = getSampleStyleSheet()
         elementos = []
@@ -29,7 +29,7 @@ class ReportLabPdfRenderer(PdfRenderer):
         elementos.append(Paragraph("VisionPrice — Cotización", styles["Title"]))
         elementos.append(
             Paragraph(
-                f"Cotización #{cotizacion.id} &nbsp;·&nbsp; "
+                f"Cotización #{cotizacion.numero} &nbsp;·&nbsp; "
                 f"Proyecto {proyecto or cotizacion.proyecto_id} &nbsp;·&nbsp; "
                 f"{cotizacion.fecha:%Y-%m-%d}",
                 styles["Normal"],

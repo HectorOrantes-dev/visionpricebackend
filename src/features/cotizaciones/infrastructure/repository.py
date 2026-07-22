@@ -2,7 +2,7 @@
 
 Persiste sobre las tablas presupuestos + detalle_presupuesto del esquema.
 """
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.features.cotizaciones.domain.entities import (
@@ -27,6 +27,20 @@ from src.shared.models import (
 class SqlAlchemyCotizacionRepository(CotizacionRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def _numero_de(self, usuario_id: int, presupuesto_id: int) -> int:
+        """Posición ordinal de esta cotización ENTRE LAS DEL PROPIO USUARIO
+        (1, 2, 3...) — nunca el id global de `presupuestos` (compartido por
+        todos los usuarios), que es lo que causaba mostrar "Cotización #29"
+        cuando el usuario solo había creado 3."""
+        result = await self._session.execute(
+            select(func.count()).select_from(Presupuesto).where(
+                Presupuesto.usuario_id == usuario_id,
+                Presupuesto.estado.in_(["borrador", "confirmado"]),
+                Presupuesto.id <= presupuesto_id,
+            )
+        )
+        return result.scalar_one()
 
     async def texto_transcripcion(self, grabacion_id: int) -> str | None:
         result = await self._session.execute(
@@ -70,6 +84,7 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
             )
         await self._session.commit()
         await self._session.refresh(presupuesto)
+        numero = await self._numero_de(usuario_id, presupuesto.id)
         return Cotizacion(
             id=presupuesto.id,
             proyecto_id=presupuesto.proyecto_id,
@@ -78,6 +93,7 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
             total=float(presupuesto.total_estimado or 0),
             fecha=presupuesto.fecha_generacion,
             lineas=lineas,
+            numero=numero,
         )
 
     async def obtener(
@@ -112,6 +128,7 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
             )
             for d in det.scalars().all()
         ]
+        numero = await self._numero_de(usuario_id, presupuesto.id)
         return Cotizacion(
             id=presupuesto.id,
             proyecto_id=presupuesto.proyecto_id,
@@ -120,6 +137,7 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
             total=float(presupuesto.total_estimado or 0),
             fecha=presupuesto.fecha_generacion,
             lineas=lineas,
+            numero=numero,
         )
 
     async def listar_cotizaciones_de_proyecto(
@@ -183,6 +201,9 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
                 Presupuesto.estado,
                 Presupuesto.total_estimado,
                 Presupuesto.fecha_generacion,
+                # Numeración propia del usuario (1, 2, 3...), no el id global
+                # de presupuestos — la ventana ya queda acotada por el WHERE.
+                func.row_number().over(order_by=Presupuesto.id).label("numero"),
             )
             .join(Proyecto, Proyecto.id == Presupuesto.proyecto_id)
             .where(
@@ -194,6 +215,7 @@ class SqlAlchemyCotizacionRepository(CotizacionRepository):
         return [
             CotizacionPdfItem(
                 id=row.id,
+                numero=row.numero,
                 proyecto_id=row.proyecto_id,
                 proyecto_nombre=row.proyecto_nombre,
                 estado=row.estado,

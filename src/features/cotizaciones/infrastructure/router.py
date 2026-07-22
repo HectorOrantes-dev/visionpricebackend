@@ -209,6 +209,7 @@ async def crear(
     )
     return CotizacionOut(
         id=cot.id,
+        numero=cot.numero,
         proyecto_id=cot.proyecto_id,
         estado=cot.estado,
         total=cot.total,
@@ -267,6 +268,7 @@ async def crear_kit(
         await recomendaciones_repo.marcar_usada(body.recomendacion_id, cot.id)
     return CotizacionOut(
         id=cot.id,
+        numero=cot.numero,
         proyecto_id=cot.proyecto_id,
         estado=cot.estado,
         total=cot.total,
@@ -290,6 +292,7 @@ async def mis_pdfs(
     return [
         CotizacionPdfOut(
             id=it.id,
+            numero=it.numero,
             proyecto_id=it.proyecto_id,
             proyecto_nombre=it.proyecto_nombre,
             estado=it.estado,

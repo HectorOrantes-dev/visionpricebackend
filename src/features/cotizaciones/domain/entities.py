@@ -66,6 +66,12 @@ class Cotizacion:
     total: float
     fecha: datetime
     lineas: list[LineaCotizacion]
+    # Número secuencial DENTRO de las cotizaciones del propio usuario (1, 2,
+    # 3...). "id" es el PK global de la tabla presupuestos (compartida por
+    # todos los usuarios) — nunca se debe mostrar al usuario como "Cotización
+    # #N", porque salta según cuántas cotizaciones hayan creado OTROS
+    # usuarios. "numero" es lo que va en pantalla/PDF.
+    numero: int = 0
 
     @property
     def mano_obra(self) -> float | None:
@@ -81,6 +87,7 @@ class Cotizacion:
 class CotizacionPdfItem:
     """Fila liviana para listar los PDFs generables del usuario (sin líneas)."""
     id: int
+    numero: int
     proyecto_id: int
     proyecto_nombre: str
     estado: str

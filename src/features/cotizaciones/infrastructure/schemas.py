@@ -117,6 +117,11 @@ class LineaOut(BaseModel):
 
 class CotizacionPdfOut(BaseModel):
     id: int
+    # Número propio del usuario (1, 2, 3...) — esto es lo que se muestra en
+    # UI/PDF como "Cotización #N". "id" es el PK global de la tabla
+    # presupuestos (compartida por todos los usuarios): NO mostrarlo al
+    # usuario, solo sirve para armar la URL de descarga del PDF.
+    numero: int
     proyecto_id: int
     proyecto_nombre: str
     estado: str
@@ -127,6 +132,7 @@ class CotizacionPdfOut(BaseModel):
 
 class CotizacionOut(BaseModel):
     id: int
+    numero: int
     proyecto_id: int
     estado: str
     total: float
