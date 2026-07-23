@@ -1,14 +1,7 @@
 """Schemas HTTP de la feature proyectos (membresía e invitaciones)."""
 from datetime import datetime
-from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field
-
-# Los mismos roles del sistema (string abierto para flexibilidad futura).
-RolEnProyecto = Literal[
-    "maestro_obra", "contratista", "arquitecto", "ingeniero_civil"
-]
-
 
 # ---------------------------------------------------------------------------
 # Invitaciones
@@ -16,9 +9,9 @@ RolEnProyecto = Literal[
 
 
 class CrearInvitacionRequest(BaseModel):
-    rol_en_proyecto: RolEnProyecto = Field(
-        ..., description="Rol con el que entrará quien use este código."
-    )
+    # rol_en_proyecto ya NO se manda: se deriva del rol de quien invita
+    # (contratista -> maestro_obra; arquitecto/ingeniero_civil -> contratista)
+    # para que no se pueda forzar una jerarquía inválida desde el cliente.
     correos: list[EmailStr] = Field(
         default_factory=list,
         description="Correos a los que enviar el código (opcional, máx. 10).",

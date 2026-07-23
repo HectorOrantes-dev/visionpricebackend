@@ -66,6 +66,8 @@ from src.features.cotizaciones.infrastructure.schemas import (
     UsoCotizacionesOut,
 )
 from src.oauth.dependencies import CurrentUser, get_current_user
+from src.oauth.permisos import Permisos
+from src.oauth.roles import require_roles
 from src.shared.auditoria import Auditor, get_auditor
 from src.shared.request_utils import get_client_ip
 
@@ -139,6 +141,7 @@ async def productos_cercanos(
         "Borrador automático: toma la extracción de una grabación, empareja "
         "proveedores cercanos y arma una cotización pre-llenada para confirmar"
     ),
+    dependencies=[Depends(require_roles(*Permisos.COTIZAR))],
 )
 async def borrador(
     body: BorradorRequest,
@@ -180,6 +183,7 @@ async def borrador(
     response_model=CotizacionOut,
     status_code=status.HTTP_201_CREATED,
     summary="Crear una cotización con los productos elegidos",
+    dependencies=[Depends(require_roles(*Permisos.COTIZAR))],
 )
 async def crear(
     body: CrearCotizacionRequest,
@@ -231,6 +235,7 @@ async def crear(
     response_model=CotizacionOut,
     status_code=status.HTTP_201_CREATED,
     summary="Crear cotización tipo KIT (loseta + pegazulejo + crucetas + boquilla)",
+    dependencies=[Depends(require_roles(*Permisos.COTIZAR))],
 )
 async def crear_kit(
     body: CrearKitRequest,

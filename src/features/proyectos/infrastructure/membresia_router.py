@@ -68,7 +68,7 @@ async def crear_invitacion(
         CrearInvitacionCommand(
             proyecto_id=proyecto_id,
             invitado_por=user.id,
-            rol_en_proyecto=body.rol_en_proyecto,
+            invitado_por_rol=user.rol or "",
             correos=[str(c) for c in body.correos],
         )
     )
@@ -111,7 +111,9 @@ async def unirse(
     auditor: Auditor = Depends(get_auditor),
 ) -> MiembroOut:
     miembro = await use_case.execute(
-        UnirseAProyectoCommand(codigo=body.codigo, usuario_id=user.id)
+        UnirseAProyectoCommand(
+            codigo=body.codigo, usuario_id=user.id, usuario_rol=user.rol or ""
+        )
     )
     await auditor.registrar(
         usuario_id=user.id,

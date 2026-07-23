@@ -63,6 +63,10 @@ class MembresiaRepository(ABC):
         """True si ya existe la fila en proyecto_colaboradores."""
 
     @abstractmethod
+    async def contar_miembros(self, proyecto_id: int) -> int:
+        """Cantidad de colaboradores (sin contar al dueño)."""
+
+    @abstractmethod
     async def listar(self, proyecto_id: int) -> list[Miembro]:
         """Lista todos los colaboradores del proyecto (con nombre y correo)."""
 

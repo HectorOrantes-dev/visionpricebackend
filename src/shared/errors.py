@@ -120,6 +120,18 @@ class PlanRequerido(DomainError):
     status_code = 402
 
 
+class ProyectoLimiteAlcanzado(DomainError):
+    """Tope fijo de cotizaciones/PDFs de un PROYECTO (no de un usuario).
+
+    409 (no 402): a diferencia de PlanLimiteAlcanzado, pagar no lo
+    desbloquea — es un tope duro del proyecto compartido, ver
+    src/shared/proyecto_limites.py.
+    """
+
+    code = "project_limit_reached"
+    status_code = 409
+
+
 def _payload(code: str, message: str, details: dict | None = None) -> dict:
     body: dict = {"error": {"code": code, "message": message}}
     if details:

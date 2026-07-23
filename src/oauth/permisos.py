@@ -15,8 +15,10 @@ class Permisos:
     # Todos los usuarios autenticados.
     TODOS = ("maestro_obra", "contratista", "arquitecto", "ingeniero_civil")
 
-    # Cotizar (grabar, transcribir, calcular m², ver productos, PDF): todos.
-    COTIZAR = TODOS
+    # Cotizar (crear cotización/kit/borrador, generar PDF): todos MENOS
+    # contratista. El contratista administra su equipo de maestros de obra
+    # (ver /proyectos/{id}/invitaciones) pero no genera cotizaciones él mismo.
+    COTIZAR = ("maestro_obra", "arquitecto", "ingeniero_civil")
 
     # Gestión e historial de proyectos: todos los roles gestionan LOS SUYOS
     # (cada operación de /proyectos filtra por dueño = user.id). El maestro de

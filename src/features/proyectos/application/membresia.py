@@ -35,6 +35,20 @@ _CODIGO_LEN = 10
 
 RolEnProyecto = str  # cualquier string; validación en el schema Pydantic
 
+# Jerarquía de invitación: quién puede invitar a quién. El contratista arma
+# su cuadrilla de maestros de obra; arquitecto/ingeniero civil arman su
+# cartera de contratistas. maestro_obra nunca invita (es el rol hoja).
+# El rol del invitado se DERIVA del rol de quien invita (no lo elige el
+# cliente) para que no se pueda forzar una combinación inválida.
+_ROL_INVITADO_POR = {
+    "contratista": "maestro_obra",
+    "arquitecto": "contratista",
+    "ingeniero_civil": "contratista",
+}
+
+# Tope de personas por proyecto de equipo: dueño + 4 colaboradores = 5.
+MAX_COLABORADORES_POR_PROYECTO = 4
+
 
 def _generar_codigo() -> str:
     """Genera un código alfanumérico de 10 caracteres (≈ 36^10 combinaciones)."""
@@ -50,7 +64,7 @@ def _generar_codigo() -> str:
 class CrearInvitacionCommand:
     proyecto_id: int
     invitado_por: int  # usuario_id del dueño
-    rol_en_proyecto: str
+    invitado_por_rol: str  # rol de cuenta de quien invita (claim JWT)
     correos: list[str] = field(default_factory=list)
     dias_vigencia: int = 3
 
@@ -71,8 +85,24 @@ class CrearInvitacion:
         if not await self._mem.es_dueno(cmd.proyecto_id, cmd.invitado_por):
             raise Forbidden("Solo el dueño del proyecto puede crear invitaciones.")
 
-        if not cmd.rol_en_proyecto.strip():
-            raise ValidationError("El rol_en_proyecto es obligatorio.")
+        # El rol que se invita se deriva del rol de quien invita — nunca lo
+        # elige el cliente — así no se puede armar una jerarquía inválida
+        # (ej. un maestro_obra invitando gente, o un contratista metiendo
+        # a otro contratista).
+        rol_en_proyecto = _ROL_INVITADO_POR.get(cmd.invitado_por_rol)
+        if rol_en_proyecto is None:
+            raise Forbidden(
+                "Tu rol no puede crear invitaciones de proyecto.",
+                details={"rol": cmd.invitado_por_rol},
+            )
+
+        actuales = await self._mem.contar_miembros(cmd.proyecto_id)
+        if actuales >= MAX_COLABORADORES_POR_PROYECTO:
+            raise Conflict(
+                f"El proyecto ya tiene el máximo de "
+                f"{MAX_COLABORADORES_POR_PROYECTO + 1} personas "
+                "(dueño + colaboradores)."
+            )
 
         # Generar código único (reintento si colisión).
         for _ in range(10):
@@ -87,7 +117,7 @@ class CrearInvitacion:
             id=0,  # lo asigna la BD
             proyecto_id=cmd.proyecto_id,
             codigo=codigo,
-            rol_en_proyecto=cmd.rol_en_proyecto,
+            rol_en_proyecto=rol_en_proyecto,
             estado="activa",
             usos=0,
             invitado_por=cmd.invitado_por,
@@ -124,6 +154,7 @@ class CrearInvitacion:
 class UnirseAProyectoCommand:
     codigo: str
     usuario_id: int
+    usuario_rol: str  # rol de cuenta de quien se une (claim JWT)
 
 
 class UnirseAProyecto:
@@ -156,6 +187,26 @@ class UnirseAProyecto:
         # Idempotente: si ya es miembro, avisa sin duplicar.
         if await self._mem.es_miembro(inv.proyecto_id, cmd.usuario_id):
             raise Conflict("Ya eres miembro de este proyecto.")
+
+        # El código fue generado para un rol específico (ver
+        # _ROL_INVITADO_POR en CrearInvitacion) — solo cuentas de ese rol
+        # pueden usarlo.
+        if cmd.usuario_rol != inv.rol_en_proyecto:
+            raise Forbidden(
+                f"Este código es para el rol '{inv.rol_en_proyecto}'; "
+                f"tu cuenta es '{cmd.usuario_rol}'."
+            )
+
+        # Tope de personas del proyecto, verificado en el momento real de
+        # unirse (la verificación al crear el código es solo una guía —
+        # esta es la que cuenta, evita que se llene con varios códigos).
+        actuales = await self._mem.contar_miembros(inv.proyecto_id)
+        if actuales >= MAX_COLABORADORES_POR_PROYECTO:
+            raise Conflict(
+                f"El proyecto ya tiene el máximo de "
+                f"{MAX_COLABORADORES_POR_PROYECTO + 1} personas "
+                "(dueño + colaboradores)."
+            )
 
         miembro = await self._mem.agregar(
             proyecto_id=inv.proyecto_id,

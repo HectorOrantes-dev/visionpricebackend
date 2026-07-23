@@ -22,6 +22,7 @@ from src.features.cotizaciones.domain.ports import (
 )
 from src.shared.errors import Forbidden, ValidationError
 from src.shared.proyecto_acceso import puede_acceder as _puede_acceder
+from src.shared.proyecto_limites import verificar_limite_proyecto
 
 
 @dataclass
@@ -64,6 +65,7 @@ class CrearCotizacion:
         # Verificar que el usuario sea dueño o colaborador del proyecto.
         if not await _puede_acceder(self._session, cmd.proyecto_id, cmd.usuario_id):
             raise Forbidden("No tienes acceso a este proyecto.")
+        await verificar_limite_proyecto(self._session, cmd.proyecto_id)
 
         if not cmd.items:
             raise ValidationError("La cotización no tiene productos.")

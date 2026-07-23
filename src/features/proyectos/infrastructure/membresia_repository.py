@@ -1,5 +1,5 @@
 """Adaptador SQLAlchemy de membresía de proyectos."""
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.features.proyectos.domain.entities import Miembro
@@ -39,6 +39,14 @@ class SqlAlchemyMembresiaRepository(MembresiaRepository):
             )
         )
         return row.scalar_one_or_none() is not None
+
+    async def contar_miembros(self, proyecto_id: int) -> int:
+        result = await self._session.execute(
+            select(func.count())
+            .select_from(ProyectoColaborador)
+            .where(ProyectoColaborador.proyecto_id == proyecto_id)
+        )
+        return result.scalar_one() or 0
 
     async def agregar(
         self, proyecto_id: int, usuario_id: int, rol: str

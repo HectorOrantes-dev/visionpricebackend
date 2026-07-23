@@ -23,6 +23,7 @@ from src.features.cotizaciones.domain.ports import (
 )
 from src.shared.errors import Forbidden, ValidationError
 from src.shared.proyecto_acceso import puede_acceder as _puede_acceder
+from src.shared.proyecto_limites import verificar_limite_proyecto
 
 
 @dataclass
@@ -61,6 +62,7 @@ class CrearCotizacionKit:
         # Verificar acceso: dueño O colaborador.
         if not await _puede_acceder(self._session, cmd.proyecto_id, cmd.usuario_id):
             raise Forbidden("No tienes acceso a este proyecto.")
+        await verificar_limite_proyecto(self._session, cmd.proyecto_id)
 
         if not cmd.superficies:
             raise ValidationError("La cotización no tiene superficies.")
