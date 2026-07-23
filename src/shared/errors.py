@@ -102,6 +102,24 @@ class UpstreamError(DomainError):
     status_code = 502
 
 
+class PlanLimiteAlcanzado(DomainError):
+    """Se agotó el uso gratuito de un recurso (ver src/shared/plan_limites.py).
+
+    402 (no 403): así el cliente distingue "no tienes permiso" (rol) de
+    "necesitas pagar para seguir" sin tener que parsear el mensaje.
+    """
+
+    code = "plan_limit_reached"
+    status_code = 402
+
+
+class PlanRequerido(DomainError):
+    """Función exclusiva de planes de pago, sin cuota gratis."""
+
+    code = "plan_required"
+    status_code = 402
+
+
 def _payload(code: str, message: str, details: dict | None = None) -> dict:
     body: dict = {"error": {"code": code, "message": message}}
     if details:

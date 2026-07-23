@@ -40,6 +40,12 @@ from src.features.cotizaciones.infrastructure.dependencies import (
     get_listar_productos,
 )
 from src.features.cotizaciones.domain.reglas_material import todas as reglas_todas
+from src.core.database import get_session
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.shared.plan_limites import (
+    obtener_uso_cotizaciones,
+    verificar_limite_cotizaciones,
+)
 from src.features.recomendaciones.infrastructure.dependencies import (
     get_recomendacion_uso_repository,
 )
@@ -57,6 +63,7 @@ from src.features.cotizaciones.infrastructure.schemas import (
     CrearKitRequest,
     MaterialReglaOut,
     ProductoCercanoOut,
+    UsoCotizacionesOut,
 )
 from src.oauth.dependencies import CurrentUser, get_current_user
 from src.shared.auditoria import Auditor, get_auditor
@@ -135,7 +142,7 @@ async def productos_cercanos(
 )
 async def borrador(
     body: BorradorRequest,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(verificar_limite_cotizaciones),
     use_case: GenerarBorradorCotizacion = Depends(get_generar_borrador),
 ) -> BorradorOut:
     resultado = await use_case.execute(
@@ -177,7 +184,7 @@ async def borrador(
 async def crear(
     body: CrearCotizacionRequest,
     request: Request,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(verificar_limite_cotizaciones),
     use_case: CrearCotizacion = Depends(get_crear_cotizacion),
     auditor: Auditor = Depends(get_auditor),
 ) -> CotizacionOut:
@@ -228,7 +235,7 @@ async def crear(
 async def crear_kit(
     body: CrearKitRequest,
     request: Request,
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(verificar_limite_cotizaciones),
     use_case: CrearCotizacionKit = Depends(get_crear_kit),
     auditor: Auditor = Depends(get_auditor),
     recomendaciones_repo: SqlAlchemyRecomendacionUsoRepository = Depends(
@@ -276,6 +283,19 @@ async def crear_kit(
         mano_obra=cot.mano_obra,
         lineas=[ln.__dict__ for ln in cot.lineas],
     )
+
+
+@router.get(
+    "/uso",
+    response_model=UsoCotizacionesOut,
+    summary="Cuántas cotizaciones lleva el usuario y cuántas le quedan del plan gratuito",
+)
+async def uso(
+    user: CurrentUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> UsoCotizacionesOut:
+    uso = await obtener_uso_cotizaciones(session, user.id)
+    return UsoCotizacionesOut(**uso.__dict__)
 
 
 @router.get(

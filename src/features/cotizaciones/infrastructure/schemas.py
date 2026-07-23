@@ -130,6 +130,14 @@ class CotizacionPdfOut(BaseModel):
     url_pdf: str
 
 
+class UsoCotizacionesOut(BaseModel):
+    plan_activo: str | None
+    ilimitado: bool
+    limite_gratis: int
+    usadas: int
+    restantes: int | None
+
+
 class CotizacionOut(BaseModel):
     id: int
     numero: int

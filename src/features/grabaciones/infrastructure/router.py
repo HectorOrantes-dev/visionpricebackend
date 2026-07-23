@@ -34,6 +34,7 @@ from src.features.grabaciones.infrastructure.schemas import (
 )
 from src.oauth.dependencies import CurrentUser, get_current_user
 from src.oauth.internal import require_internal_key
+from src.shared.plan_limites import requerir_plan_activo
 from src.shared.rate_limit import rate_limit
 
 router = APIRouter(tags=["grabaciones"])
@@ -102,7 +103,7 @@ async def crear_grabacion(
         default=None, description="Fecha real de grabación (ISO 8601)"
     ),
     audio: UploadFile = File(...),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(requerir_plan_activo),
     use_case: RegistrarGrabacion = Depends(get_registrar_grabacion),
 ) -> GrabacionOut:
     contenido = await audio.read()
