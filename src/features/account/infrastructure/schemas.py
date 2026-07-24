@@ -22,4 +22,6 @@ class PerfilOut(BaseModel):
     proveedor_auth: str
     fecha_registro: datetime
     plan_activo: str | None
+    plan_nombre: str | None
+    plan_precio_mxn: int | None
     vigencia_hasta: datetime | None

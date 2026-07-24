@@ -8,6 +8,16 @@ from sqlalchemy.orm import joinedload
 
 from src.shared.models import Usuario
 
+# Nombre/precio amigables por plan_key — mismos plan_key que el catálogo del
+# microservicio de Pagos (src/shared/plan_catalog.py ahí). Se duplica acá
+# nada más lo cosmético (nombre y precio); la fuente de verdad de la
+# facturación sigue siendo Pagos, esto solo es para no mostrar el slug crudo
+# ("vision-price-pro") en el perfil.
+_PLANES = {
+    "vision-price-pro": {"nombre": "Pro", "precio_mxn": 349},
+    "vision-price-plan": {"nombre": "Plan", "precio_mxn": 899},
+}
+
 
 @dataclass
 class Perfil:
@@ -20,6 +30,8 @@ class Perfil:
     proveedor_auth: str
     fecha_registro: datetime
     plan_activo: str | None
+    plan_nombre: str | None
+    plan_precio_mxn: int | None
     vigencia_hasta: datetime | None
 
 
@@ -54,6 +66,7 @@ async def obtener_perfil(session: AsyncSession, usuario_id: int) -> Perfil | Non
     u = result.scalar_one_or_none()
     if u is None:
         return None
+    plan_info = _PLANES.get(u.plan_activo) if u.plan_activo else None
     return Perfil(
         id=u.id,
         nombre=u.nombre,
@@ -64,5 +77,7 @@ async def obtener_perfil(session: AsyncSession, usuario_id: int) -> Perfil | Non
         proveedor_auth=u.proveedor_auth,
         fecha_registro=u.fecha_registro,
         plan_activo=u.plan_activo,
+        plan_nombre=plan_info["nombre"] if plan_info else None,
+        plan_precio_mxn=plan_info["precio_mxn"] if plan_info else None,
         vigencia_hasta=u.vigencia_hasta,
     )
